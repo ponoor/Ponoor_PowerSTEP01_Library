@@ -1,7 +1,8 @@
-powerSTEP01 Arduino Library
+Ponoor PowerSTEP01 Library
 ==========
+Arduino library support for STMicroelectronics PowerSTEP01 stepper driver chip with voltage and current mode drive.
 
-This library is a modification of the L6470-based SparkFun AutoDriver library for the powerSTEP01-based STMicroelectronics X-NUCLEO-IHM03A1 stepper driver board.
+This library is a modification of Megunolink powerSTEP01_Arduino_Library which is a modification of the L6470-based SparkFun AutoDriver library.
 
 Repository Contents
 -------------------

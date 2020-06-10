@@ -80,6 +80,11 @@ setMinSpeed	KEYWORD2
 setFullSpeed	KEYWORD2
 setAcc	KEYWORD2
 setDec	KEYWORD2
+setMaxSpeedRaw  KEYWORD2
+setMinSpeedRaw  KEYWORD2
+setFullSpeedRaw KEYWORD2
+setAccRaw   KEYWORD2
+setDecRaw   KEYWORD2
 setOCThreshold	KEYWORD2
 setPWMFreq	KEYWORD2
 setSlewRate	KEYWORD2
@@ -91,6 +96,10 @@ setAccKVAL	KEYWORD2
 setDecKVAL	KEYWORD2
 setRunKVAL	KEYWORD2
 setHoldKVAL	KEYWORD2
+setAccTVAL  KEYWORD2
+setDecTVAL  KEYWORD2
+setRunTVAL  KEYWORD2
+setHoldTVAL KEYWORD2
 getLoSpdOpt	KEYWORD2
 getStepMode	KEYWORD2
 getMaxSpeed	KEYWORD2
@@ -98,6 +107,11 @@ getMinSpeed	KEYWORD2
 getFullSpeed	KEYWORD2
 getAcc	KEYWORD2
 getDec	KEYWORD2
+getMaxSpeedRaw
+getMinSpeedRaw
+getFullSpeedRaw
+getAccRaw
+getDecRaw
 getOCThreshold	KEYWORD2
 getPWMFreqDivisor	KEYWORD2
 getPWMFreqMultiplier	KEYWORD2
@@ -110,14 +124,20 @@ getAccKVAL	KEYWORD2
 getDecKVAL	KEYWORD2
 getRunKVAL	KEYWORD2
 getHoldKVAL	KEYWORD2
+getAccTVAL	KEYWORD2
+getDecTVAL	KEYWORD2
+getRunTVAL	KEYWORD2
+getHoldTVAL	KEYWORD2
 getPos	KEYWORD2
 getMark	KEYWORD2
 run	KEYWORD2
+runRaw  KEYWORD2
 stepClock	KEYWORD2
 move	KEYWORD2
 goTo	KEYWORD2
 goToDir	KEYWORD2
 goUntil	KEYWORD2
+goUntilRaw  KEYWORD2
 releaseSw	KEYWORD2
 goHome	KEYWORD2
 goMark	KEYWORD2

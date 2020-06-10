@@ -1,9 +1,8 @@
-// Originally the SparkFun AutoDriver library,
-// modified by Elliot Baptist in January 2017 
-// to work with the powerSTEP01 stepper driver IC
+// This library was forked from Megunolink's powerSTEP01_Arduino_Library : https://github.com/Megunolink/powerSTEP01_Arduino_Library
+// powerSTEP01_Arduino_Library was forked from SparkFun AutoDriver Arduino Library : https://github.com/sparkfun/SparkFun_AutoDriver_Arduino_Library
 
-#ifndef powerSTEP_h
-#define powerSTEP_h
+#ifndef PONOOR_POWERSTEP01_h
+#define PONOOR_POWERSTEP01_h
 
 #include "Arduino.h"
 #include <SPI.h>
