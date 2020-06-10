@@ -1,4 +1,4 @@
-#include "powerSTEP01ArduinoLibrary.h"
+#include "Ponoor_PowerSTEP01Library.h"
 
 // Setup the SYNC/BUSY pin to be either SYNC or BUSY, and to a desired
 //  ticks per step level.

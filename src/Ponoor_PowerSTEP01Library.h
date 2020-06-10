@@ -2,8 +2,8 @@
 // modified by Elliot Baptist in January 2017 
 // to work with the powerSTEP01 stepper driver IC
 
-#ifndef powerSTEP_h
-#define powerSTEP_h
+#ifndef PONOOR_POWERSTEP_h
+#define PONOOR_POWERSTEP_h
 
 #include "Arduino.h"
 #include <SPI.h>

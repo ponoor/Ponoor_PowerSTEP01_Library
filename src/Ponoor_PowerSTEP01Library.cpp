@@ -1,5 +1,5 @@
 #include <SPI.h>
-#include "powerSTEP01ArduinoLibrary.h"
+#include "Ponoor_PowerSTEP01Library.h"
 
 int powerSTEP::_numBoards;
 

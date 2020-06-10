@@ -1,4 +1,4 @@
-#include "powerSTEP01ArduinoLibrary.h"
+#include "Ponoor_PowerSTEP01Library.h"
 #include <SPI.h>
 
 // powerSTEPSupport.cpp - Contains utility functions for converting real-world 

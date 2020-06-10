@@ -1,4 +1,4 @@
-#include "powerSTEP01ArduinoLibrary.h"
+#include "Ponoor_PowerSTEP01Library.h"
 
 struct basicPowerSTEP01Configuration
 {

@@ -1,4 +1,4 @@
-#include "powerSTEP01ArduinoLibrary.h"
+#include "Ponoor_PowerSTEP01Library.h"
 
 //commands.ino - Contains high-level command implementations- movement
 //   and configuration commands, for example.
