@@ -2,8 +2,8 @@
 // modified by Elliot Baptist in January 2017 
 // to work with the powerSTEP01 stepper driver IC
 
-#ifndef PONOOR_POWERSTEP_h
-#define PONOOR_POWERSTEP_h
+#ifndef powerSTEP_h
+#define powerSTEP_h
 
 #include "Arduino.h"
 #include <SPI.h>
@@ -37,11 +37,18 @@ class powerSTEP
     void setLoSpdOpt(boolean enable);
     void configSyncPin(byte pinFunc, byte syncSteps);
     void configStepMode(byte stepMode);
+    void setVoltageMode(byte stepMode);
+    void setCurrentMode(byte stepMode);
     void setMaxSpeed(float stepsPerSecond);
     void setMinSpeed(float stepsPerSecond);
     void setFullSpeed(float stepsPerSecond);
     void setAcc(float stepsPerSecondPerSecond);
     void setDec(float stepsPerSecondPerSecond);
+  	void setMaxSpeedRaw(unsigned long integerSpeed);
+	  void setMinSpeedRaw(unsigned long integerSpeed);
+	  void setFullSpeedRaw(unsigned long integerSpeed);
+	  void setAccRaw(unsigned long integerSpeed);
+	  void setDecRaw(unsigned long integerSpeed);
     void setOCThreshold(byte threshold);
     void setPWMFreq(int divisor, int multiplier);
     void setSlewRate(int slewRate);
@@ -53,6 +60,10 @@ class powerSTEP
     void setDecKVAL(byte kvalInput);
     void setRunKVAL(byte kvalInput);
     void setHoldKVAL(byte kvalInput);
+  	void setAccTVAL(byte tvalInput);
+	  void setDecTVAL(byte tvalInput);
+	  void setRunTVAL(byte tvalInput);
+	  void setHoldTVAL(byte tvalInput);
 
     boolean getLoSpdOpt();
     // getSyncPin
@@ -62,6 +73,11 @@ class powerSTEP
     float getFullSpeed();
     float getAcc();
     float getDec();
+    unsigned long getMaxSpeedRaw();
+    unsigned long getMinSpeedRaw();
+    unsigned long getFullSpeedRaw();
+    unsigned long getAccRaw();
+    unsigned long getDecRaw();
     byte getOCThreshold();
     int getPWMFreqDivisor();
     int getPWMFreqMultiplier();
@@ -74,16 +90,22 @@ class powerSTEP
     byte getDecKVAL();
     byte getRunKVAL();
     byte getHoldKVAL();
-    
+  	byte getAccTVAL();
+	  byte getDecTVAL();
+	  byte getRunTVAL();
+	  byte getHoldTVAL();
+
     // ...and now, operational commands.
     long getPos();
     long getMark();
     void run(byte dir, float stepsPerSec);
+    void runRaw(byte dir, unsigned long integerSpeed);
     void stepClock(byte dir);
     void move(byte dir, unsigned long numSteps);
     void goTo(long pos);
     void goToDir(byte dir, long pos);
     void goUntil(byte action, byte dir, float stepsPerSec);
+    void goUntilRaw(byte action, byte dir, unsigned long integerSpeed);
     void releaseSw(byte action, byte dir);
     void goHome();
     void goMark();
@@ -205,7 +227,7 @@ class powerSTEP
 #define OC_SD_DISABLE           0x0000  // Bridges do NOT shutdown on OC detect
 #define OC_SD_ENABLE            0x0080  // Bridges shutdown on OC detect
 
-// Voltage compensation settings. See p 34 of datasheet.
+// Voltage compensation settings. See p 41 of datasheet.
 #define VS_COMP_DISABLE         0x0000  // Disable motor voltage compensation.
 #define VS_COMP_ENABLE          0x0020  // Enable motor voltage compensation.
 

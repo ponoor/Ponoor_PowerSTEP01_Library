@@ -41,6 +41,34 @@ byte powerSTEP::getStepMode() {
   return (byte)(getParam(STEP_MODE) & 0x07);
 }
 
+void powerSTEP::setVoltageMode(byte stepMode) {
+	  // Only some of these bits are useful (the lower three). We'll extract the
+	  //  current contents, clear those three bits, then set them accordingly.
+	  byte stepModeConfig = (byte)getParam(STEP_MODE);
+	  stepModeConfig &= 0xF0;
+
+	  // Now we can OR in the new bit settings. Mask the argument so we don't
+	  //  accidentally the other bits, if the user sends us a non-legit value.
+	  stepModeConfig |= (stepMode&0x07);
+
+	  // Now push the change to the chip.
+	  setParam(STEP_MODE, (unsigned long)stepModeConfig);
+}
+
+void powerSTEP::setCurrentMode(byte stepMode) {
+	  // Only some of these bits are useful (the lower three). We'll extract the
+	  //  current contents, clear those three bits, then set them accordingly.
+	  byte stepModeConfig = (byte)getParam(STEP_MODE);
+	  stepModeConfig &= 0xF8;
+	  stepModeConfig |= 0x8;
+	  // Now we can OR in the new bit settings. Mask the argument so we don't
+	  //  accidentally the other bits, if the user sends us a non-legit value.
+	  stepModeConfig |= (stepMode&0x07);
+
+	  // Now push the change to the chip.
+	  setParam(STEP_MODE, (unsigned long)stepModeConfig);
+}
+
 // This is the maximum speed the dSPIN will attempt to produce.
 void powerSTEP::setMaxSpeed(float stepsPerSecond)
 {
@@ -48,14 +76,21 @@ void powerSTEP::setMaxSpeed(float stepsPerSecond)
   //  the dSPIN can understand. Fortunately, we have a function to do that.
   unsigned long integerSpeed = maxSpdCalc(stepsPerSecond);
   
-  // Now, we can set that paramter.
-  setParam(MAX_SPEED, integerSpeed);
+  setMaxSpeedRaw(integerSpeed);
 }
-
+void powerSTEP::setMaxSpeedRaw(unsigned long integerSpeed)
+{
+	// Now, we can set that paramter.
+	setParam(MAX_SPEED, integerSpeed);
+}
 
 float powerSTEP::getMaxSpeed()
 {
   return maxSpdParse(getParam(MAX_SPEED));
+}
+unsigned long powerSTEP::getMaxSpeedRaw()
+{
+	return getParam(MAX_SPEED);
 }
 
 // Set the minimum speed allowable in the system. This is the speed a motion
@@ -66,7 +101,10 @@ void powerSTEP::setMinSpeed(float stepsPerSecond)
   // We need to convert the floating point stepsPerSecond into a value that
   //  the dSPIN can understand. Fortunately, we have a function to do that.
   unsigned long integerSpeed = minSpdCalc(stepsPerSecond);
-  
+  setMinSpeedRaw(integerSpeed);
+}
+void powerSTEP::setMinSpeedRaw(unsigned long integerSpeed)
+{
   // MIN_SPEED also contains the LSPD_OPT flag, so we need to protect that.
   unsigned long temp = getParam(MIN_SPEED) & 0x00001000;
   
@@ -78,18 +116,30 @@ float powerSTEP::getMinSpeed()
 {
   return minSpdParse(getParam(MIN_SPEED));
 }
+unsigned long powerSTEP::getMinSpeedRaw()
+{
+	return getParam(MIN_SPEED);
+}
 
 // Above this threshold, the dSPIN will cease microstepping and go to full-step
 //  mode. 
 void powerSTEP::setFullSpeed(float stepsPerSecond)
 {
   unsigned long integerSpeed = FSCalc(stepsPerSecond);
+  setFullSpeedRaw(integerSpeed);
+}
+void powerSTEP::setFullSpeedRaw(unsigned long integerSpeed)
+{
   setParam(FS_SPD, integerSpeed);
 }
 
 float powerSTEP::getFullSpeed()
 {
   return FSParse(getParam(FS_SPD));
+}
+unsigned long powerSTEP::getFullSpeedRaw()
+{
+	return getParam(FS_SPD);
 }
 
 // Set the acceleration rate, in steps per second per second. This value is
@@ -98,24 +148,40 @@ float powerSTEP::getFullSpeed()
 void powerSTEP::setAcc(float stepsPerSecondPerSecond)
 {
   unsigned long integerAcc = accCalc(stepsPerSecondPerSecond);
-  setParam(ACC, integerAcc);
+  setAccRaw(integerAcc);
+}
+void powerSTEP::setAccRaw(unsigned long integerAcc)
+{
+	setParam(ACC, integerAcc);
 }
 
 float powerSTEP::getAcc()
 {
   return accParse(getParam(ACC));
 }
+unsigned long powerSTEP::getAccRaw()
+{
+	return getParam(ACC);
+}
 
 // Same rules as setAcc().
 void powerSTEP::setDec(float stepsPerSecondPerSecond)
 {
   unsigned long integerDec = decCalc(stepsPerSecondPerSecond);
-  setParam(DECEL, integerDec);
+  setDecRaw(integerDec);
+}
+void powerSTEP::setDecRaw(unsigned long integerDec)
+{
+	setParam(DECEL, integerDec);
 }
 
 float powerSTEP::getDec()
 {
   return accParse(getParam(DECEL));
+}
+unsigned long powerSTEP::getDecRaw()
+{
+	return getParam(DECEL);
 }
 
 void powerSTEP::setOCThreshold(byte threshold)
@@ -290,6 +356,46 @@ void powerSTEP::setHoldKVAL(byte kvalInput)
 byte powerSTEP::getHoldKVAL()
 {
   return (byte) getParam(KVAL_HOLD);
+}
+// TVAL registers are specific for current mode driving.
+void powerSTEP::setAccTVAL(byte tvalInput)
+{
+	setParam(TVAL_ACC, tvalInput);
+}
+
+byte powerSTEP::getAccTVAL()
+{
+	return (byte) getParam(TVAL_ACC);
+}
+
+void powerSTEP::setDecTVAL(byte tvalInput)
+{
+	setParam(TVAL_DEC, tvalInput);
+}
+
+byte powerSTEP::getDecTVAL()
+{
+	return (byte) getParam(TVAL_DEC);
+}
+
+void powerSTEP::setRunTVAL(byte tvalInput)
+{
+	setParam(TVAL_RUN, tvalInput);
+}
+
+byte powerSTEP::getRunTVAL()
+{
+	return (byte) getParam(TVAL_RUN);
+}
+
+void powerSTEP::setHoldTVAL(byte tvalInput)
+{
+	setParam(TVAL_HOLD, tvalInput);
+}
+
+byte powerSTEP::getHoldTVAL()
+{
+	return (byte) getParam(TVAL_HOLD);
 }
 
 // Enable or disable the low-speed optimization option. With LSPD_OPT enabled,

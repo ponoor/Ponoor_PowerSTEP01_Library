@@ -58,7 +58,11 @@ void powerSTEP::run(byte dir, float stepsPerSec)
   SPIXfer(RUN | dir);
   unsigned long integerSpeed = spdCalc(stepsPerSec);
   if (integerSpeed > 0xFFFFF) integerSpeed = 0xFFFFF;
-  
+  runRaw(dir, integerSpeed);
+}
+void powerSTEP::runRaw(byte dir, unsigned long integerSpeed) {
+	SPIXfer(RUN | dir);
+  if (integerSpeed > 0xFFFFF) integerSpeed = 0xFFFFF;
   // Now we need to push this value out to the dSPIN. The 32-bit value is
   //  stored in memory in little-endian format, but the dSPIN expects a
   //  big-endian output, so we need to reverse the byte-order of the
@@ -140,6 +144,12 @@ void powerSTEP::goUntil(byte action, byte dir, float stepsPerSec)
   SPIXfer(GO_UNTIL | action | dir);
   unsigned long integerSpeed = spdCalc(stepsPerSec);
   if (integerSpeed > 0x3FFFFF) integerSpeed = 0x3FFFFF;
+  goUntilRaw(action, dir, integerSpeed);
+}
+void powerSTEP::goUntilRaw(byte action, byte dir, unsigned long integerSpeed)
+{
+	SPIXfer(GO_UNTIL | action | dir);
+	if (integerSpeed > 0x3FFFFF) integerSpeed = 0x3FFFFF;
   // See run() for an explanation of what's going on here.
   byte* bytePointer = (byte*)&integerSpeed;
   for (int8_t i = 2; i >= 0; i--)
@@ -233,7 +243,7 @@ int powerSTEP::getStatus()
 {
   int temp = 0;
   byte* bytePointer = (byte*)&temp;
-  SPIXfer(GET_STATUS);
+  SPIXfer(CMD_GET_STATUS);
   bytePointer[1] = SPIXfer(0);
   bytePointer[0] = SPIXfer(0);
   return temp;
