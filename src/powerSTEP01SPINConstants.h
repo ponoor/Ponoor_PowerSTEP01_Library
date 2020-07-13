@@ -148,7 +148,7 @@
 #define STATUS_TH_DEVICE_SHUTDOWN     (0x0003)<<11  // Thermal device shutdown
 
 // Status register motor status field
-#define STATUS_MOT_STATUS                0x00C0      // field mask
+#define STATUS_MOT_STATUS                0x0060      // field mask
 #define STATUS_MOT_STATUS_STOPPED       (0x0000)<<5 // Motor stopped
 #define STATUS_MOT_STATUS_ACCELERATION  (0x0001)<<5 // Motor accelerating
 #define STATUS_MOT_STATUS_DECELERATION  (0x0002)<<5 // Motor decelerating

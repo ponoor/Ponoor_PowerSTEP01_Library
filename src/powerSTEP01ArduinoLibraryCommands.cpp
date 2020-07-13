@@ -55,13 +55,11 @@ long powerSTEP::getMark()
 //  appropriate integer values for this function.
 void powerSTEP::run(byte dir, float stepsPerSec)
 {
-  SPIXfer(RUN | dir);
   unsigned long integerSpeed = spdCalc(stepsPerSec);
-  if (integerSpeed > 0xFFFFF) integerSpeed = 0xFFFFF;
   runRaw(dir, integerSpeed);
 }
 void powerSTEP::runRaw(byte dir, unsigned long integerSpeed) {
-	SPIXfer(RUN | dir);
+  SPIXfer(RUN | dir);
   if (integerSpeed > 0xFFFFF) integerSpeed = 0xFFFFF;
   // Now we need to push this value out to the dSPIN. The 32-bit value is
   //  stored in memory in little-endian format, but the dSPIN expects a
@@ -142,7 +140,6 @@ void powerSTEP::goToDir(byte dir, long pos)
 void powerSTEP::goUntil(byte action, byte dir, float stepsPerSec)
 {
   unsigned long integerSpeed = spdCalc(stepsPerSec);
-  if (integerSpeed > 0x3FFFFF) integerSpeed = 0x3FFFFF;
   goUntilRaw(action, dir, integerSpeed);
 }
 void powerSTEP::goUntilRaw(byte action, byte dir, unsigned long integerSpeed)
