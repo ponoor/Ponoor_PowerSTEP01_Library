@@ -93,7 +93,7 @@
 // Configure the UVLO protection thresholds
 #define CONFIG_UVLOVAL                 0x0100 // Mask for this bit.
 #define CONFIG_UVLOVAL_LOW             0x0000 // V_ccth 6.9V-6.3V, DV_BOOTTh 6V-5.5V
-#define CONFIG_UVLOVAL_HIGH            0x0200 // V_ccth 10.4V-10, DV_BOOTTh 9.2V-8.8V
+#define CONFIG_UVLOVAL_HIGH            0x0100 // V_ccth 10.4V-10, DV_BOOTTh 9.2V-8.8V
 
 // Configure the Vcc voltage regulator output
 #define CONFIG_VCCVAL                  0x0200 // Mask for this bit.
@@ -121,6 +121,14 @@
 #define CONFIG_PWM_DIV_5               (0x04)<<13
 #define CONFIG_PWM_DIV_6               (0x05)<<13
 #define CONFIG_PWM_DIV_7               (0x06)<<13
+
+// The predictive current control method is enable or not
+#define CONFIG_PRED                    0x8000     // mask for this bit field.
+#define CONFIG_PRED_DISABLE            0x0000
+#define CONFIG_PRED_ENABLE             0x8000
+
+//The target switching period of the current control algorithm
+#define CONFIG_TSW                     0x7C00     // mask for this bit field.
 
 // Status register bit renames- read-only bits conferring information about the
 //  device to the user.

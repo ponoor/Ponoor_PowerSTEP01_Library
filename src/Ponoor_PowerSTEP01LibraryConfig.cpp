@@ -309,6 +309,24 @@ int powerSTEP::getOscMode()
   return (int) (getParam(CONFIG) & 0x000F);
 }
 
+// current mode options for CONFIG
+void powerSTEP::setPredictiveControl(int predictiveCurrentControl)
+{
+  unsigned long configVal = getParam(CONFIG);
+  configVal &= ~(CONFIG_PRED);
+  configVal |= (CONFIG_PRED & predictiveCurrentControl);
+  setParam(CONFIG, configVal);
+}
+
+void powerSTEP::setSwitchingPeriod(int switchingPeriod)
+{
+  switchingPeriod &= 0x1F; // 5bit
+  unsigned long configVal = getParam(CONFIG);
+  configVal &= ~(CONFIG_TSW);
+  configVal |= (CONFIG_TSW & (switchingPeriod << 10));
+  setParam(CONFIG, configVal);
+}
+
 // The KVAL registers are...weird. I don't entirely understand how they differ
 //  from the microstepping, but if you have trouble getting the motor to run,
 //  tweaking KVAL has proven effective in the past. There's a separate register

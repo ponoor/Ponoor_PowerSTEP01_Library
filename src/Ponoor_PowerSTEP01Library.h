@@ -55,6 +55,8 @@ class powerSTEP
     void setVoltageComp(int vsCompMode);
     void setSwitchMode(int switchMode);
     void setOscMode(int oscillatorMode);
+    void setPredictiveControl(int predictiveCurrentControl);
+    void setSwitchingPeriod(int switchingPeriod);
     void setAccKVAL(byte kvalInput);
     void setDecKVAL(byte kvalInput);
     void setRunKVAL(byte kvalInput);
