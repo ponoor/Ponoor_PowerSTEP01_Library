@@ -6,7 +6,7 @@
 
 #include "Arduino.h"
 #include <SPI.h>
-#include "powerSTEP01SPINConstants.h"
+#include "Ponoor_PowerSTEP01SPINConstants.h"
 
 class powerSTEP
 {
