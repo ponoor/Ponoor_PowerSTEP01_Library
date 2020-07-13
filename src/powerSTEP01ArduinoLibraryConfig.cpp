@@ -41,29 +41,25 @@ byte powerSTEP::getStepMode() {
   return (byte)(getParam(STEP_MODE) & 0x07);
 }
 
-void powerSTEP::setVoltageMode(byte stepMode) {
-	  // Only some of these bits are useful (the lower three). We'll extract the
-	  //  current contents, clear those three bits, then set them accordingly.
-	  byte stepModeConfig = (byte)getParam(STEP_MODE);
-	  stepModeConfig &= 0xF0;
+// Get current speed
+float powerSTEP::getSpeed()
+{
+	return spdParse(getParam(SPEED));
+}
 
-	  // Now we can OR in the new bit settings. Mask the argument so we don't
-	  //  accidentally the other bits, if the user sends us a non-legit value.
-	  stepModeConfig |= (stepMode&0x07);
+void powerSTEP::setVoltageMode() {
+	  // Clear CM_VM bit of STEP_MODE register. 
+	  byte stepModeConfig = (byte)getParam(STEP_MODE);
+	  stepModeConfig &= ~(STEP_MODE_CM_VM);
 
 	  // Now push the change to the chip.
 	  setParam(STEP_MODE, (unsigned long)stepModeConfig);
 }
 
-void powerSTEP::setCurrentMode(byte stepMode) {
-	  // Only some of these bits are useful (the lower three). We'll extract the
-	  //  current contents, clear those three bits, then set them accordingly.
+void powerSTEP::setCurrentMode() {
+	  // Set CM_VM bit of STEP_MODE register.
 	  byte stepModeConfig = (byte)getParam(STEP_MODE);
-	  stepModeConfig &= 0xF8;
-	  stepModeConfig |= 0x8;
-	  // Now we can OR in the new bit settings. Mask the argument so we don't
-	  //  accidentally the other bits, if the user sends us a non-legit value.
-	  stepModeConfig |= (stepMode&0x07);
+	  stepModeConfig |= STEP_MODE_CM_VM;
 
 	  // Now push the change to the chip.
 	  setParam(STEP_MODE, (unsigned long)stepModeConfig);

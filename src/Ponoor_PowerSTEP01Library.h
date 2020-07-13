@@ -36,8 +36,8 @@ class powerSTEP
     void setLoSpdOpt(boolean enable);
     void configSyncPin(byte pinFunc, byte syncSteps);
     void configStepMode(byte stepMode);
-    void setVoltageMode(byte stepMode);
-    void setCurrentMode(byte stepMode);
+    void setVoltageMode();
+    void setCurrentMode();
     void setMaxSpeed(float stepsPerSecond);
     void setMinSpeed(float stepsPerSecond);
     void setFullSpeed(float stepsPerSecond);
@@ -67,6 +67,7 @@ class powerSTEP
     boolean getLoSpdOpt();
     // getSyncPin
     byte getStepMode();
+    float getSpeed();
     float getMaxSpeed();
     float getMinSpeed();
     float getFullSpeed();

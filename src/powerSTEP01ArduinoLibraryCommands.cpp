@@ -141,13 +141,13 @@ void powerSTEP::goToDir(byte dir, long pos)
 //  either RESET to 0 or COPY-ed into the MARK register.
 void powerSTEP::goUntil(byte action, byte dir, float stepsPerSec)
 {
-  SPIXfer(GO_UNTIL | action | dir);
   unsigned long integerSpeed = spdCalc(stepsPerSec);
   if (integerSpeed > 0x3FFFFF) integerSpeed = 0x3FFFFF;
   goUntilRaw(action, dir, integerSpeed);
 }
 void powerSTEP::goUntilRaw(byte action, byte dir, unsigned long integerSpeed)
 {
+  action = (action > 0) << 3;
 	SPIXfer(GO_UNTIL | action | dir);
 	if (integerSpeed > 0x3FFFFF) integerSpeed = 0x3FFFFF;
   // See run() for an explanation of what's going on here.
@@ -167,6 +167,7 @@ void powerSTEP::goUntilRaw(byte action, byte dir, unsigned long integerSpeed)
 //  for act.
 void powerSTEP::releaseSw(byte action, byte dir)
 {
+  action = (action > 0) << 3;
   SPIXfer(RELEASE_SW | action | dir);
 }
 

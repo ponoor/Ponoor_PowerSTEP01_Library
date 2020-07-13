@@ -34,6 +34,11 @@
 #define SYNC_SEL_32  0x60
 #define SYNC_SEL_64  0x70
 
+// CM_VM bit
+#define STEP_MODE_CM_VM 0x08
+#define VOLTAGE_MODE 0x00
+#define CURRENT_MODE 0x01
+
 // Bit names for the ALARM_EN register.
 //  Each of these bits defines one potential alarm condition.
 //  When one of these conditions occurs and the respective bit in ALARM_EN is set,
