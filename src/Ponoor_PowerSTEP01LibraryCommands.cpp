@@ -1,5 +1,4 @@
 #include "Ponoor_PowerSTEP01Library.h"
-
 //commands.ino - Contains high-level command implementations- movement
 //   and configuration commands, for example.
 
@@ -240,9 +239,15 @@ void powerSTEP::hardHiZ()
 int powerSTEP::getStatus()
 {
   int temp = 0;
+  #if defined(ARDUINO_ARCH_SAMD)
+  NVIC_DisableIRQ( USB_IRQn );
+  #endif
   byte* bytePointer = (byte*)&temp;
   SPIXfer(CMD_GET_STATUS);
   bytePointer[1] = SPIXfer(0);
   bytePointer[0] = SPIXfer(0);
+  #if defined(ARDUINO_ARCH_SAMD)
+  NVIC_EnableIRQ( USB_IRQn );
+  #endif
   return temp;
 }
