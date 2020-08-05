@@ -280,11 +280,11 @@ long powerSTEP::paramHandler(byte param, unsigned long value)
     case CONFIG: 
       retVal = xferParam(value, 16);
       break;
-    // STATUS contains read-only information about the current condition of the chip. A
+    // REG_STATUS contains read-only information about the current condition of the chip. A
     //  comprehensive set of constants for masking and testing this register is provided, but
     //  users should refer to the datasheet to ensure that they fully understand each one of
     //  the bits in the register.
-    case STATUS:  // STATUS is a read-only register
+    case REG_STATUS:  // REG_STATUS is a read-only register
       retVal = xferParam(0, 16);;
       break;
     default:

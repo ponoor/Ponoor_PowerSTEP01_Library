@@ -4,3 +4,6 @@
 *.ods
 *.csv
 *.epf
+
+# Visual Studio files #
+*.vcxitems
