@@ -196,7 +196,7 @@
 #define TVAL_RUN             0x0A
 #define TVAL_ACC             0x0B
 #define TVAL_DEC             0x0C
-#define T_DAST               0x0E
+#define T_FAST               0x0E
 #define TON_MIN              0x0F
 #define TOFF_MIN             0x10
 
