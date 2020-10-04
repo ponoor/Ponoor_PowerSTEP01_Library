@@ -239,15 +239,18 @@ void powerSTEP::hardHiZ()
 int powerSTEP::getStatus()
 {
   int temp = 0;
-  #if defined(ARDUINO_ARCH_SAMD)
-  NVIC_DisableIRQ( USB_IRQn );
-  #endif
+#if defined(ARDUINO_ARCH_SAMD)
+  //NVIC_DisableIRQ( USB_IRQn );
+  __disable_irq();
+#endif
+  
   byte* bytePointer = (byte*)&temp;
   SPIXfer(CMD_GET_STATUS);
   bytePointer[1] = SPIXfer(0);
   bytePointer[0] = SPIXfer(0);
-  #if defined(ARDUINO_ARCH_SAMD)
-  NVIC_EnableIRQ( USB_IRQn );
-  #endif
+#if defined(ARDUINO_ARCH_SAMD)
+  //NVIC_EnableIRQ( USB_IRQn );
+  __enable_irq();
+#endif
   return temp;
 }

@@ -136,7 +136,7 @@
 #define STATUS_BUSY                    0x0002 // mirrors BUSY pin
 #define STATUS_SW_F                    0x0004 // low when switch open, high when closed
 #define STATUS_SW_EVN                  0x0008 // active high, set on switch falling edge,
-                                                    //  cleared by reading STATUS
+                                                    //  cleared by reading REG_STATUS
 #define STATUS_DIR                     0x0010 // Indicates current motor direction.
                                                     //  High is FWD, Low is REV.
 #define STATUS_CMD_ERROR               0x0080 // Last command not performed or valid.
@@ -190,13 +190,13 @@
 #define GATECFG1             0x18
 #define GATECFG2             0x19
 #define CONFIG               0x1A
-#define STATUS               0x1B
+#define REG_STATUS           0x1B
 // Current mode configuration
 #define TVAL_HOLD            0x09
 #define TVAL_RUN             0x0A
 #define TVAL_ACC             0x0B
 #define TVAL_DEC             0x0C
-#define T_DAST               0x0E
+#define T_FAST               0x0E
 #define TON_MIN              0x0F
 #define TOFF_MIN             0x10
 

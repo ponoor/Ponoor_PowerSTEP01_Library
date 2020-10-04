@@ -4,6 +4,14 @@ Arduino library support for STMicroelectronics PowerSTEP01 stepper driver chip w
 
 This library is a modification of Megunolink powerSTEP01_Arduino_Library which is a modification of the L6470-based SparkFun AutoDriver library.
 
+Differences from the original library
+-------------------
+- Added the current control drive mode functions
+- Added getSpeed() function
+- Disable USB interrupts during getStatus() to avoid return value collapse for ATSAMD
+- Fixed ACT bit of goUntil and releaseSw
+- Fixed STATUS register bit names and bit masks.
+
 Repository Contents
 -------------------
 * **src** - Contains the source for the Arduino library.
