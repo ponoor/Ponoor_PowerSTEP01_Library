@@ -43,13 +43,14 @@ void setup()
   driver.configSyncPin(BUSY_PIN, 0); // use SYNC/nBUSY pin as nBUSY, 
                                      // thus syncSteps (2nd paramater) does nothing
                                      
-  driver.configStepMode(STEP_FS_128); // 1/128 microstepping, full steps = STEP_FS,
+  driver.configStepMode(STEP_FS_16); // 1/16 microstepping, full steps = STEP_FS,
                                 // options: 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128
+                                // in the current mode, microstepping is limited minimum 1/16
                                 
-  driver.setMaxSpeed(1000); // max speed in units of full steps/s 
+  driver.setMaxSpeed(650); // max speed in units of full steps/s 
   driver.setFullSpeed(2000); // full steps/s threshold for disabling microstepping
-  driver.setAcc(2000); // full steps/s^2 acceleration
-  driver.setDec(2000); // full steps/s^2 deceleration
+  driver.setAcc(10000); // full steps/s^2 acceleration
+  driver.setDec(10000); // full steps/s^2 deceleration
   
   driver.setSlewRate(SR_520V_us); // faster may give more torque (but also EM noise),
                                   // options are: 114, 220, 400, 520, 790, 980(V/us)
@@ -97,20 +98,39 @@ void setup()
   Serial.println(F("Initialisation complete"));
 }
 
-void loop() 
-{ 
-  Serial.println((int)driver.getStatus(), HEX); // print STATUS register
-  
-  driver.move(FWD, 25600); // move forward 25600 microsteps
+void oneMotion() {
+  driver.move(FWD, 12800); // move forward 12800 microsteps
   while(driver.busyCheck()); // wait fo the move to finish
   driver.softStop(); // soft stops prevent errors in the next operation
   while(driver.busyCheck());
   
-  driver.move(REV, 25600); // reverse back
+  driver.move(REV, 12800); // reverse back
   while(driver.busyCheck());
   driver.softStop();
   while(driver.busyCheck());
-  
-  Serial.println((int)driver.getStatus(), HEX);
+}
+
+void loop() 
+{ 
+  Serial.println("Voltage mode");
+  driver.softHiZ();
+  driver.setMaxSpeed(650.);
+  driver.setRunKVAL(64);
+  driver.setAccKVAL(64);
+  driver.setDecKVAL(64);
+  driver.setHoldKVAL(8);
+  driver.setVoltageMode();
+  oneMotion();
+  delay(1000);
+
+  Serial.println("Current mode");
+  driver.softHiZ();
+  driver.setMaxSpeed(3000.); // In general, the current mode spins much faster.
+  driver.setRunTVAL(8);
+  driver.setAccTVAL(8);
+  driver.setDecTVAL(8);
+  driver.setHoldTVAL(2);
+  driver.setCurrentMode();
+  oneMotion();
   delay(1000);
 }

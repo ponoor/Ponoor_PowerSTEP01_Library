@@ -1,31 +1,35 @@
 // Program demonstrating how to control a powerSTEP01-based ST X-NUCLEO-IHM03A1 
-// stepper motor driver shield on an Arduino Uno-compatible board
+// stepper motor driver shield on an Arduino Zero-compatible board
 
 #include <Ponoor_PowerSTEP01Library.h>
+#include "wiring_private.h" // pinPeripheral() function
 #include <SPI.h>
+
+// SPI setup for zero/M0
+#define MISO1 12  // D6 /SERCOM3/PAD[2] miso
+#define MOSI1 11  // D11/SERCOM3/PAD[0] mosi
+#define SCK1  13  // D12/SERCOM3/PAD[3] sck
+SPIClass altSPI (&sercom1, MISO1, SCK1, MOSI1, SPI_PAD_0_SCK_1, SERCOM_RX_PAD_3);
 
 // Pin definitions for the X-NUCLEO-IHM03A1 connected to an Uno-compatible board
 #define nCS_PIN 10
 #define STCK_PIN 9
 #define nSTBY_nRESET_PIN 8
-#define nBUSY_PIN 4
+#define nBUSY_PIN 4 // note: D2 and D4 are swapeed between Zero and M0
 
 // powerSTEP library instance, parameters are distance from the end of a daisy-chain
 // of drivers, !CS pin, !STBY/!Reset pin
-powerSTEP driver(0, nCS_PIN, nSTBY_nRESET_PIN);
+powerSTEP driver(0, nCS_PIN, nSTBY_nRESET_PIN, nBUSY_PIN);
 
 void setup() 
 {
   // Start serial
-  Serial.begin(9600);
-  Serial.println("powerSTEP01 Arduino control initialising...");
+  SerialUSB.begin(9600);
+  SerialUSB.println("powerSTEP01 Arduino control initialising...");
 
   // Prepare pins
   pinMode(nSTBY_nRESET_PIN, OUTPUT);
   pinMode(nCS_PIN, OUTPUT);
-  pinMode(MOSI, OUTPUT);
-  pinMode(MISO, OUTPUT);
-  pinMode(SCK, OUTPUT);
 
   // Reset powerSTEP and set CS
   digitalWrite(nSTBY_nRESET_PIN, HIGH);
@@ -33,12 +37,15 @@ void setup()
   digitalWrite(nSTBY_nRESET_PIN, HIGH);
   digitalWrite(nCS_PIN, HIGH);
 
-  // Start SPI
-  SPI.begin();
-  SPI.setDataMode(SPI_MODE3);
+  // Start SPI for PowerSTEP
+  altSPI.begin();
+  pinPeripheral(MOSI1, PIO_SERCOM);
+  pinPeripheral(SCK1, PIO_SERCOM);
+  pinPeripheral(MISO1 , PIO_SERCOM);
+  altSPI.setDataMode(SPI_MODE3);
 
   // Configure powerSTEP
-  driver.SPIPortConnect(&SPI); // give library the SPI port (only the one on an Uno)
+  driver.SPIPortConnect(&altSPI); // give library the SPI port (only the one on an Uno)
   
   driver.configSyncPin(BUSY_PIN, 0); // use SYNC/nBUSY pin as nBUSY, 
                                      // thus syncSteps (2nd paramater) does nothing
@@ -94,12 +101,12 @@ void setup()
 
   driver.getStatus(); // clears error flags
 
-  Serial.println(F("Initialisation complete"));
+  SerialUSB.println(F("Initialisation complete"));
 }
 
 void loop() 
 { 
-  Serial.println((int)driver.getStatus(), HEX); // print STATUS register
+  SerialUSB.println((int)driver.getStatus(), HEX); // print STATUS register
   
   driver.move(FWD, 25600); // move forward 25600 microsteps
   while(driver.busyCheck()); // wait fo the move to finish
@@ -111,6 +118,6 @@ void loop()
   driver.softStop();
   while(driver.busyCheck());
   
-  Serial.println((int)driver.getStatus(), HEX);
+  SerialUSB.println((int)driver.getStatus(), HEX);
   delay(1000);
 }

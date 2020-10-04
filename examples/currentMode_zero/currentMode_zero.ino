@@ -1,8 +1,15 @@
 // Program demonstrating how to control a powerSTEP01-based ST X-NUCLEO-IHM03A1 
-// stepper motor driver shield on an Arduino Uno-compatible board
+// stepper motor driver shield on an Arduino Zero-compatible board
 
 #include <Ponoor_PowerSTEP01Library.h>
+#include "wiring_private.h" // pinPeripheral() function
 #include <SPI.h>
+
+// SPI setup for zero/M0
+#define MISO1 12  // D6 /SERCOM3/PAD[2] miso
+#define MOSI1 11  // D11/SERCOM3/PAD[0] mosi
+#define SCK1  13  // D12/SERCOM3/PAD[3] sck
+SPIClass altSPI (&sercom1, MISO1, SCK1, MOSI1, SPI_PAD_0_SCK_1, SERCOM_RX_PAD_3);
 
 // Pin definitions for the X-NUCLEO-IHM03A1 connected to an Uno-compatible board
 #define nCS_PIN 10
@@ -17,15 +24,12 @@ powerSTEP driver(0, nCS_PIN, nSTBY_nRESET_PIN);
 void setup() 
 {
   // Start serial
-  Serial.begin(9600);
-  Serial.println("powerSTEP01 Arduino control initialising...");
+  SerialUSB.begin(9600);
+  SerialUSB.println("powerSTEP01 Arduino control initialising...");
 
   // Prepare pins
   pinMode(nSTBY_nRESET_PIN, OUTPUT);
   pinMode(nCS_PIN, OUTPUT);
-  pinMode(MOSI, OUTPUT);
-  pinMode(MISO, OUTPUT);
-  pinMode(SCK, OUTPUT);
 
   // Reset powerSTEP and set CS
   digitalWrite(nSTBY_nRESET_PIN, HIGH);
@@ -33,23 +37,27 @@ void setup()
   digitalWrite(nSTBY_nRESET_PIN, HIGH);
   digitalWrite(nCS_PIN, HIGH);
 
-  // Start SPI
-  SPI.begin();
-  SPI.setDataMode(SPI_MODE3);
+  // Start SPI for PowerSTEP
+  altSPI.begin();
+  pinPeripheral(MOSI1, PIO_SERCOM);
+  pinPeripheral(SCK1, PIO_SERCOM);
+  pinPeripheral(MISO1 , PIO_SERCOM);
+  altSPI.setDataMode(SPI_MODE3);
 
   // Configure powerSTEP
-  driver.SPIPortConnect(&SPI); // give library the SPI port (only the one on an Uno)
+  driver.SPIPortConnect(&altSPI); // give library the SPI port (only the one on an Uno)
   
   driver.configSyncPin(BUSY_PIN, 0); // use SYNC/nBUSY pin as nBUSY, 
                                      // thus syncSteps (2nd paramater) does nothing
                                      
-  driver.configStepMode(STEP_FS_128); // 1/128 microstepping, full steps = STEP_FS,
+  driver.configStepMode(STEP_FS_16); // 1/16 microstepping, full steps = STEP_FS,
                                 // options: 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128
+                                // in the current mode, microstepping is limited minimum 1/16
                                 
-  driver.setMaxSpeed(1000); // max speed in units of full steps/s 
+  driver.setMaxSpeed(650); // max speed in units of full steps/s 
   driver.setFullSpeed(2000); // full steps/s threshold for disabling microstepping
-  driver.setAcc(2000); // full steps/s^2 acceleration
-  driver.setDec(2000); // full steps/s^2 deceleration
+  driver.setAcc(10000); // full steps/s^2 acceleration
+  driver.setDec(10000); // full steps/s^2 deceleration
   
   driver.setSlewRate(SR_520V_us); // faster may give more torque (but also EM noise),
                                   // options are: 114, 220, 400, 520, 790, 980(V/us)
@@ -94,23 +102,42 @@ void setup()
 
   driver.getStatus(); // clears error flags
 
-  Serial.println(F("Initialisation complete"));
+  SerialUSB.println(F("Initialisation complete"));
 }
 
-void loop() 
-{ 
-  Serial.println((int)driver.getStatus(), HEX); // print STATUS register
-  
-  driver.move(FWD, 25600); // move forward 25600 microsteps
+void oneMotion() {
+  driver.move(FWD, 12800); // move forward 12800 microsteps
   while(driver.busyCheck()); // wait fo the move to finish
   driver.softStop(); // soft stops prevent errors in the next operation
   while(driver.busyCheck());
   
-  driver.move(REV, 25600); // reverse back
+  driver.move(REV, 12800); // reverse back
   while(driver.busyCheck());
   driver.softStop();
   while(driver.busyCheck());
-  
-  Serial.println((int)driver.getStatus(), HEX);
+}
+
+void loop() 
+{ 
+  SerialUSB.println("Voltage mode");
+  driver.softHiZ();
+  driver.setMaxSpeed(650.);
+  driver.setRunKVAL(64);
+  driver.setAccKVAL(64);
+  driver.setDecKVAL(64);
+  driver.setHoldKVAL(8);
+  driver.setVoltageMode();
+  oneMotion();
+  delay(1000);
+
+  SerialUSB.println("Current mode");
+  driver.softHiZ();
+  driver.setMaxSpeed(3000.); // In general, the current mode spins much faster.
+  driver.setRunTVAL(8);
+  driver.setAccTVAL(8);
+  driver.setDecTVAL(8);
+  driver.setHoldTVAL(2);
+  driver.setCurrentMode();
+  oneMotion();
   delay(1000);
 }
