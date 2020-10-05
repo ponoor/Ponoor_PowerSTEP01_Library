@@ -305,14 +305,18 @@ long powerSTEP::xferParam(unsigned long value, byte bitLen)
   byte temp;
 
   unsigned long retVal = 0; 
-
+#if defined(ARDUINO_ARCH_SAMD)
+  __disable_irq();
+#endif
   for (int i = 0; i < byteLen; i++)
   {
     retVal = retVal << 8;
     temp = SPIXfer((byte)(value>>((byteLen-i-1)*8)));
     retVal |= temp;
   }
-
+#if defined(ARDUINO_ARCH_SAMD)
+  __enable_irq();
+#endif
   unsigned long mask = 0xffffffff >> (32-bitLen);
   return retVal & mask;
 }
