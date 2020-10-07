@@ -1,16 +1,17 @@
 Ponoor PowerSTEP01 Library
 ==========
-Arduino library support for STMicroelectronics PowerSTEP01 stepper driver chip with voltage and current mode drive.
+Arduino library support for STMicroelectronics [PowerSTEP01 stepper driver chip](https://www.st.com/en/motor-drivers/powerstep01.html) with voltage and current mode drive.
 
 This library is a modification of Megunolink [powerSTEP01_Arduino_Library](https://github.com/Megunolink/powerSTEP01_Arduino_Library) which is a modification of the L6470-based SparkFun [AutoDriver library](https://github.com/sparkfun/SparkFun_AutoDriver_Arduino_Library).
 
 Differences from the original library
 -------------------
 - Added the current control drive mode functions
-- Added getSpeed() function
-- Disable USB interrupts during getStatus() to avoid return value collapse for ATSAMD
-- Fixed ACT bit of goUntil and releaseSw
-- Fixed STATUS register bit names and bit masks.
+- Added `getSpeed()` function
+- Disable USB interrupts during `getStatus` and `xferParam` to avoid return value collapse for ATSAMD
+- Fixed `ACT` bit of goUntil and releaseSw
+- Fixed `STATUS` register bit names and bit masks.
+- Change some constants name(`GET_STATUS`, `STATUS`) to avoid conflicts with other libraries.
 
 Repository Contents
 -------------------
