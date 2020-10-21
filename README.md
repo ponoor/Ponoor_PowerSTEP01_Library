@@ -13,16 +13,30 @@ Differences from the original library
 - Fixed `STATUS` register bit names and bit masks.
 - Change some constants name(`GET_STATUS`, `STATUS`) to avoid conflicts with other libraries.
 
+Notes
+-------------------
+Since the registers shown in the table below are physically identical, for example, when you change `KVAL_HOLD`, the value of `TVAL_HOLD` is also changed. Please save them in Arduino sketch when you switch the control mode if necessary.
+
+| Address | Register name in Voltage mode | Register name in Current mode |
+| --- | --- | --- |
+| h09 | `KVAL_HOLD` | `TVAL_HOLD` |
+| h0A | `KVAL_RUN` | `TVAL_RUN` |
+| h0B | `KVAL_ACC` | `TVAL_ACC` |
+| h0C | `KVAL_DEC` | `TVAL_DEC` |
+| h0E | `ST_SLP` | `T_FAST` |
+| h0F | `FN_SLP_ACC` | `TON_MIN` |
+| h10 | `FN_SLP_DEC` | `TOFF_MIN` |
+
+Install
+-------------------
+This library can be installed from the library maneger of Arduino IDE.
+
 Repository Contents
 -------------------
 * **src** - Contains the source for the Arduino library.
 * **Examples** - Example sketches demonstrating the use of the library
 * **keywords.txt** - List of words to be highlighted by the Arduino IDE
 * **library.properties** - Used by the Arduino package manager
-
-Documentation
--------------------
-* **[Installing an Arduino Library Guide](https://learn.sparkfun.com/tutorials/installing-an-arduino-library)** - Basic information on how to install an Arduino library.
 
 License Information
 -------------------
