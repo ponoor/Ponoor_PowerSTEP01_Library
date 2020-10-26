@@ -12,10 +12,10 @@ Differences from the original library
 -------------------
 - Added the current control drive mode functions
 - Added `getSpeed()` function
-- Disable USB interrupts during `getStatus` and `xferParam` to avoid return value collapse for ATSAMD
+- Disable interrupts during `getStatus` and `xferParam` to avoid return value collapse for ATSAMD
 - Fixed `ACT` bit of goUntil and releaseSw
 - Fixed `STATUS` register bit names and bit masks.
-- Change some constants name(`GET_STATUS`, `STATUS`) to avoid conflicts with other libraries.
+- Change some constants name(`GET_STATUS`, `CMD_STATUS`) to avoid conflicts with other libraries.
 
 Notes
 -------------------
