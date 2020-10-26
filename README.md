@@ -15,7 +15,7 @@ Differences from the original library
 - Disable interrupts during `getStatus` and `xferParam` to avoid return value collapse for ATSAMD
 - Fixed `ACT` bit of goUntil and releaseSw
 - Fixed `STATUS` register bit names and bit masks.
-- Change some constants name(`GET_STATUS`, `CMD_STATUS`) to avoid conflicts with other libraries.
+- Changed some constants name(`CMD_GET_STATUS`, `REG_STATUS`) to avoid conflicts with other libraries.
 
 Notes
 -------------------
