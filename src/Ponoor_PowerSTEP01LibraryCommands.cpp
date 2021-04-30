@@ -34,6 +34,14 @@ long powerSTEP::getPos()
   return temp;
 }
 
+// Returns the content of the EL_POS register, which is a 9-bit indicates the current 
+//  electrical position of the motor. 
+unsigned int powerSTEP::getElPos()
+{
+  unsigned int temp = getParam(EL_POS);
+  return temp;
+}
+
 // Just like getPos(), but for MARK.
 long powerSTEP::getMark()
 {
@@ -193,6 +201,11 @@ void powerSTEP::setMark(long newMark)
 void powerSTEP::setPos(long newPos)
 {
   setParam(ABS_POS, newPos);
+}
+
+void powerSTEP::setElPos(unsigned int newElPos)
+{
+  setParam(EL_POS, newElPos);
 }
 
 // Sets the ABS_POS register to 0, effectively declaring the current

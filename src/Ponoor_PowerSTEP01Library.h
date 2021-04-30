@@ -99,6 +99,7 @@ class powerSTEP
 
     // ...and now, operational commands.
     long getPos();
+    unsigned int getElPos();
     long getMark();
     void run(byte dir, float stepsPerSec);
     void runRaw(byte dir, unsigned long integerSpeed);
@@ -113,6 +114,7 @@ class powerSTEP
     void goMark();
     void setMark(long newMark);
     void setPos(long newPos);
+    void setElPos(unsigned int newElPos);
     void resetPos();
     void resetDev();
     void softStop();
