@@ -11,29 +11,29 @@
 // This is a 12-bit value, so we need to make sure the value is at or below 0xFFF.
 unsigned long powerSTEP::accCalc(float stepsPerSecPerSec)
 {
-  float temp = stepsPerSecPerSec * 0.137438;
-  if( (unsigned long) long(temp) > 0x00000FFF) return 0x00000FFF;
+  float temp = stepsPerSecPerSec * 0.06871948F;
+  if( (unsigned long) long(temp) >= 0x00000FFF) return 0x00000FFE;
   else return (unsigned long) long(temp);
 }
 
 
 float powerSTEP::accParse(unsigned long stepsPerSecPerSec)
 {
-    return (float) (stepsPerSecPerSec & 0x00000FFF) / 0.137438;
+    return (float)(stepsPerSecPerSec & 0x00000FFF) * 15.258789F;
 }
 
 // The calculation for DEC is the same as for ACC. Value is 0x08A on boot.
 // This is a 12-bit value, so we need to make sure the value is at or below 0xFFF.
 unsigned long powerSTEP::decCalc(float stepsPerSecPerSec)
 {
-  float temp = stepsPerSecPerSec * 0.137438;
+  float temp = stepsPerSecPerSec * 0.06871948F;
   if( (unsigned long) long(temp) > 0x00000FFF) return 0x00000FFF;
   else return (unsigned long) long(temp);
 }
 
 float powerSTEP::decParse(unsigned long stepsPerSecPerSec)
 {
-    return (float) (stepsPerSecPerSec & 0x00000FFF) / 0.137438;
+    return (float)(stepsPerSecPerSec & 0x00000FFF) * 15.258789F;
 }
 
 // The value in the MAX_SPD register is [(steps/s)*(tick)]/(2^-18) where tick is 
@@ -42,7 +42,7 @@ float powerSTEP::decParse(unsigned long stepsPerSecPerSec)
 // This is a 10-bit value, so we need to make sure it remains at or below 0x3FF
 unsigned long powerSTEP::maxSpdCalc(float stepsPerSec)
 {
-  unsigned long temp = ceil(stepsPerSec * .065536);
+  unsigned long temp = ceil(stepsPerSec * 0.065536F);
   if( temp > 0x000003FF) return 0x000003FF;
   else return temp;
 }
@@ -50,7 +50,7 @@ unsigned long powerSTEP::maxSpdCalc(float stepsPerSec)
 
 float powerSTEP::maxSpdParse(unsigned long stepsPerSec)
 {
-    return (float) (stepsPerSec & 0x000003FF) / 0.065536;
+    return (float)(stepsPerSec & 0x000003FF) * 15.258789F;
 }
 
 // The value in the MIN_SPD register is [(steps/s)*(tick)]/(2^-24) where tick is 
@@ -59,14 +59,14 @@ float powerSTEP::maxSpdParse(unsigned long stepsPerSec)
 // This is a 12-bit value, so we need to make sure the value is at or below 0xFFF.
 unsigned long powerSTEP::minSpdCalc(float stepsPerSec)
 {
-  float temp = stepsPerSec / 0.238;
+  float temp = stepsPerSec * 4.194304F;
   if( (unsigned long) long(temp) > 0x00000FFF) return 0x00000FFF;
   else return (unsigned long) long(temp);
 }
 
 float powerSTEP::minSpdParse(unsigned long stepsPerSec)
 {
-    return (float) ((stepsPerSec & 0x00000FFF) * 0.238);
+    return (float) ((float)(stepsPerSec & 0x00000FFF) * 0.23841858F);
 }
 
 // The value in the FS_SPD register is ([(steps/s)*(tick)]/(2^-18))-0.5 where tick is 
@@ -75,30 +75,30 @@ float powerSTEP::minSpdParse(unsigned long stepsPerSec)
 // This is a 10-bit value, so we need to make sure the value is at or below 0x3FF.
 unsigned long powerSTEP::FSCalc(float stepsPerSec)
 {
-  float temp = (stepsPerSec * .065536)-.5;
+  float temp = (stepsPerSec * 0.065536F)-0.5F;
   if( (unsigned long) long(temp) > 0x000003FF) return 0x000003FF;
   else return (unsigned long) long(temp);
 }
 
 float powerSTEP::FSParse(unsigned long stepsPerSec)
 {
-    return (((float) (stepsPerSec & 0x000003FF)) + 0.5) / 0.065536;
+    return (((float)(stepsPerSec & 0x000003FF)) + 0.5F) * 15.258789F;
 }
 
-// The value in the INT_SPD register is [(steps/s)*(tick)]/(2^-24) where tick is 
+// The value in the INT_SPD register is [(steps/s)*(tick)]/(2^-26) where tick is 
 //  250ns (datasheet value)- 0x408 on boot.
 // Multiply desired steps/s by 4.1943 to get an appropriate value for this register
 // This is a 14-bit value, so we need to make sure the value is at or below 0x3FFF.
 unsigned long powerSTEP::intSpdCalc(float stepsPerSec)
 {
-  float temp = stepsPerSec * 4.1943;
+  float temp = stepsPerSec * 16.777216F;
   if( (unsigned long) long(temp) > 0x00003FFF) return 0x00003FFF;
   else return (unsigned long) long(temp);
 }
 
 float powerSTEP::intSpdParse(unsigned long stepsPerSec)
 {
-    return (float) (stepsPerSec & 0x00003FFF) / 4.1943;
+    return (float)(stepsPerSec & 0x00003FFF) * 0.059604645F;
 }
 
 // When issuing RUN command, the 20-bit speed is [(steps/s)*(tick)]/(2^-28) where tick is 
@@ -107,14 +107,14 @@ float powerSTEP::intSpdParse(unsigned long stepsPerSec)
 // This is a 20-bit value, so we need to make sure the value is at or below 0xFFFFF.
 unsigned long powerSTEP::spdCalc(float stepsPerSec)
 {
-  unsigned long temp = stepsPerSec * 67.106;
+  unsigned long temp = stepsPerSec * 67.108864F;
   if( temp > 0x000FFFFF) return 0x000FFFFF;
   else return temp;
 }
 
 float powerSTEP::spdParse(unsigned long stepsPerSec)
 {
-    return (float) (stepsPerSec & 0x000FFFFF) / 67.106;
+    return (float)(stepsPerSec & 0x000FFFFF) * 0.014901161F;
 }
 
 // Much of the functionality between "get parameter" and "set parameter" is
