@@ -130,6 +130,52 @@ class powerSTEP
     void softHiZ();
     void hardHiZ();
 
+    // Packed daisy-chain transfers.
+    //
+    // The regular API sends one command per call, and every call shifts the
+    //  whole chain (N bytes per byte of command), so talking to N chips costs
+    //  N*N bytes per byte of command. The prepare*() methods only stage a
+    //  command in the instance (no SPI traffic; a later call overwrites the
+    //  staged command). performPrepared() then sends the staged commands of
+    //  ALL instances together, using at most 4 frames instead of N*(command
+    //  length) frames. Instances without a staged command get NOP.
+    //
+    // Restrictions: every instance must share the same CS pin and SPI port
+    //  (a single daisy chain). performPrepared() sends nothing and returns
+    //  false if this is not the case, or if positions are invalid/duplicated.
+    //
+    // prepareSetParam() writes the value as is, because nothing can be read
+    //  between the commands of a packed transfer. Registers that share their
+    //  address with a flag are therefore overwritten as a whole: writing
+    //  FS_SPD clears BOOST_MODE (bit 10) unless the value includes it, and
+    //  writing MIN_SPEED clears LSPD_OPT (bit 12). The setFullSpeedRaw() /
+    //  setMinSpeedRaw() / setBoostMode() / setLoSpdOpt() methods preserve
+    //  those flags because they read the register first.
+    void prepareGetParam(byte param);
+    void prepareSetParam(byte param, unsigned long value);
+    void prepareGetStatus();
+    void prepareGetPos();
+    void prepareRun(byte dir, float stepsPerSec);
+    void prepareRunRaw(byte dir, unsigned long integerSpeed);
+    void prepareMove(byte dir, unsigned long numSteps);
+    void prepareGoTo(long pos);
+    void prepareGoToDir(byte dir, long pos);
+    void prepareSoftStop();
+    void prepareHardStop();
+    void prepareSoftHiZ();
+    void prepareHardHiZ();
+    void prepareNop();  // cancel the staged command
+
+    // Sends the staged commands of all instances. Returns false (and sends
+    //  nothing) if the instances cannot be sent as a single chain.
+    static bool performPrepared();
+
+    // Results of the last performPrepared(); valid until the next prepare*()
+    //  call on this instance.
+    unsigned long preparedResult();  // response masked to the register width
+    long preparedPos();              // sign-extended ABS_POS (see getPos())
+    int preparedStatus();            // 16-bit STATUS (see getStatus())
+
     // SPI clock used for all transfers, in Hz. Default 4 MHz; values above
     //  the datasheet maximum of 5 MHz are clamped.
     static void setSPIClock(uint32_t hz);
@@ -163,6 +209,12 @@ class powerSTEP
     // Sends a multi-byte command in one interrupt-protected transaction.
     void sendBytes(const byte *tx, byte len);
 
+    // Stages a command for performPrepared().
+    void stage(const byte *tx, byte len, byte bitLen, byte type);
+
+    // Builds the frame-th packet of the chain (one byte per chip).
+    static void assembleFrame(byte frame, byte *packet);
+
     // Support functions for converting from user units to powerSTEP01 units
     unsigned long accCalc(float stepsPerSecPerSec);
     unsigned long decCalc(float stepsPerSecPerSec);
@@ -188,6 +240,17 @@ class powerSTEP
     static int _numBoards;
     SPIClass *_SPI;
     static uint32_t _spiClock;
+
+    // Every instance registers itself so that performPrepared() can reach it.
+    static powerSTEP *_instances[POWERSTEP01_MAX_DEVICES];
+    void registerInstance();
+
+    enum { PREP_NONE = 0, PREP_GET_PARAM, PREP_SET_PARAM, PREP_GET_STATUS, PREP_COMMAND };
+    byte _prepTx[4];
+    byte _prepRx[4];
+    byte _prepLen;
+    byte _prepBitLen;
+    byte _prepType;
 };
 
 // User constants for public functions.

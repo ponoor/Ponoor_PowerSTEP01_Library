@@ -2,6 +2,7 @@
 #include "Ponoor_PowerSTEP01Library.h"
 
 int powerSTEP::_numBoards;
+powerSTEP *powerSTEP::_instances[POWERSTEP01_MAX_DEVICES];
 uint32_t powerSTEP::_spiClock = 4000000;
 
 uint32_t powerSTEP::_irqSave()
@@ -31,8 +32,8 @@ powerSTEP::powerSTEP(int position, int CSPin, int resetPin, int busyPin)
   _position = position;
   _resetPin = resetPin;
   _busyPin = busyPin;
-  _numBoards++;
   _SPI = &SPI;
+  registerInstance();
 }
 
 powerSTEP::powerSTEP(int position, int CSPin, int resetPin)
@@ -41,8 +42,20 @@ powerSTEP::powerSTEP(int position, int CSPin, int resetPin)
   _position = position;
   _resetPin = resetPin;
   _busyPin = -1;
-  _numBoards++;
   _SPI = &SPI;
+  registerInstance();
+}
+
+void powerSTEP::registerInstance()
+{
+  _prepLen = 0;
+  _prepBitLen = 0;
+  _prepType = PREP_NONE;
+  for (byte i = 0; i < 4; i++) { _prepTx[i] = 0; _prepRx[i] = 0; }
+  // _numBoards keeps counting past POWERSTEP01_MAX_DEVICES so that SPIXfer() and
+  //  performPrepared() can detect an oversized chain.
+  if (_numBoards < POWERSTEP01_MAX_DEVICES) _instances[_numBoards] = this;
+  _numBoards++;
 }
 
 void powerSTEP::SPIPortConnect(SPIClass *SPIPort)
