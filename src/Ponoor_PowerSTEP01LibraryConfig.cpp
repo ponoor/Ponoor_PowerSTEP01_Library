@@ -44,25 +44,25 @@ byte powerSTEP::getStepMode() {
 // Get current speed
 float powerSTEP::getSpeed()
 {
-	return spdParse(getParam(SPEED));
+  return spdParse(getParam(SPEED));
 }
 
 void powerSTEP::setVoltageMode() {
-	  // Clear CM_VM bit of STEP_MODE register. 
-	  byte stepModeConfig = (byte)getParam(STEP_MODE);
-	  stepModeConfig &= ~(STEP_MODE_CM_VM);
+  // Clear CM_VM bit of STEP_MODE register. 
+  byte stepModeConfig = (byte)getParam(STEP_MODE);
+  stepModeConfig &= ~(STEP_MODE_CM_VM);
 
-	  // Now push the change to the chip.
-	  setParam(STEP_MODE, (unsigned long)stepModeConfig);
+  // Now push the change to the chip.
+  setParam(STEP_MODE, (unsigned long)stepModeConfig);
 }
 
 void powerSTEP::setCurrentMode() {
-	  // Set CM_VM bit of STEP_MODE register.
-	  byte stepModeConfig = (byte)getParam(STEP_MODE);
-	  stepModeConfig |= STEP_MODE_CM_VM;
+  // Set CM_VM bit of STEP_MODE register.
+  byte stepModeConfig = (byte)getParam(STEP_MODE);
+  stepModeConfig |= STEP_MODE_CM_VM;
 
-	  // Now push the change to the chip.
-	  setParam(STEP_MODE, (unsigned long)stepModeConfig);
+  // Now push the change to the chip.
+  setParam(STEP_MODE, (unsigned long)stepModeConfig);
 }
 
 // This is the maximum speed the dSPIN will attempt to produce.
@@ -76,8 +76,8 @@ void powerSTEP::setMaxSpeed(float stepsPerSecond)
 }
 void powerSTEP::setMaxSpeedRaw(unsigned long integerSpeed)
 {
-	// Now, we can set that paramter.
-	setParam(MAX_SPEED, integerSpeed);
+  // Now, we can set that paramter.
+  setParam(MAX_SPEED, integerSpeed);
 }
 
 float powerSTEP::getMaxSpeed()
@@ -86,7 +86,7 @@ float powerSTEP::getMaxSpeed()
 }
 unsigned long powerSTEP::getMaxSpeedRaw()
 {
-	return getParam(MAX_SPEED);
+  return getParam(MAX_SPEED);
 }
 
 // Set the minimum speed allowable in the system. This is the speed a motion
@@ -114,7 +114,7 @@ float powerSTEP::getMinSpeed()
 }
 unsigned long powerSTEP::getMinSpeedRaw()
 {
-	return getParam(MIN_SPEED);
+  return getParam(MIN_SPEED);
 }
 
 // Above this threshold, the dSPIN will cease microstepping and go to full-step
@@ -168,7 +168,7 @@ void powerSTEP::setAcc(float stepsPerSecondPerSecond)
 }
 void powerSTEP::setAccRaw(unsigned long integerAcc)
 {
-	setParam(ACC, integerAcc);
+  setParam(ACC, integerAcc);
 }
 
 float powerSTEP::getAcc()
@@ -177,7 +177,7 @@ float powerSTEP::getAcc()
 }
 unsigned long powerSTEP::getAccRaw()
 {
-	return getParam(ACC);
+  return getParam(ACC);
 }
 
 // Same rules as setAcc(), except that the upper limit is 0xFFF (59590
@@ -189,7 +189,7 @@ void powerSTEP::setDec(float stepsPerSecondPerSecond)
 }
 void powerSTEP::setDecRaw(unsigned long integerDec)
 {
-	setParam(DECEL, integerDec);
+  setParam(DECEL, integerDec);
 }
 
 float powerSTEP::getDec()
@@ -198,7 +198,7 @@ float powerSTEP::getDec()
 }
 unsigned long powerSTEP::getDecRaw()
 {
-	return getParam(DECEL);
+  return getParam(DECEL);
 }
 
 // The threshold is a 5-bit value: (threshold + 1) * 31.25mV, from 31.25mV to
@@ -398,42 +398,42 @@ byte powerSTEP::getHoldKVAL()
 // TVAL registers are specific for current mode driving.
 void powerSTEP::setAccTVAL(byte tvalInput)
 {
-	setParam(TVAL_ACC, tvalInput & 0x7F);
+  setParam(TVAL_ACC, tvalInput & 0x7F);
 }
 
 byte powerSTEP::getAccTVAL()
 {
-	return (byte) getParam(TVAL_ACC);
+  return (byte) getParam(TVAL_ACC);
 }
 
 void powerSTEP::setDecTVAL(byte tvalInput)
 {
-	setParam(TVAL_DEC, tvalInput & 0x7F);
+  setParam(TVAL_DEC, tvalInput & 0x7F);
 }
 
 byte powerSTEP::getDecTVAL()
 {
-	return (byte) getParam(TVAL_DEC);
+  return (byte) getParam(TVAL_DEC);
 }
 
 void powerSTEP::setRunTVAL(byte tvalInput)
 {
-	setParam(TVAL_RUN, tvalInput & 0x7F);
+  setParam(TVAL_RUN, tvalInput & 0x7F);
 }
 
 byte powerSTEP::getRunTVAL()
 {
-	return (byte) getParam(TVAL_RUN);
+  return (byte) getParam(TVAL_RUN);
 }
 
 void powerSTEP::setHoldTVAL(byte tvalInput)
 {
-	setParam(TVAL_HOLD, tvalInput & 0x7F);
+  setParam(TVAL_HOLD, tvalInput & 0x7F);
 }
 
 byte powerSTEP::getHoldTVAL()
 {
-	return (byte) getParam(TVAL_HOLD);
+  return (byte) getParam(TVAL_HOLD);
 }
 
 // Enable or disable the low-speed optimization option. With LSPD_OPT enabled,

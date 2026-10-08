@@ -2,6 +2,27 @@
 #include "Ponoor_PowerSTEP01Library.h"
 
 int powerSTEP::_numBoards;
+uint32_t powerSTEP::_spiClock = 4000000;
+
+uint32_t powerSTEP::_irqSave()
+{
+#if defined(ARDUINO_ARCH_SAMD)
+  uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+  return primask;
+#else
+  return 0;
+#endif
+}
+
+void powerSTEP::_irqRestore(uint32_t primask)
+{
+#if defined(ARDUINO_ARCH_SAMD)
+  if (!primask) __enable_irq();
+#else
+  (void)primask;
+#endif
+}
 
 // Constructors
 powerSTEP::powerSTEP(int position, int CSPin, int resetPin, int busyPin)

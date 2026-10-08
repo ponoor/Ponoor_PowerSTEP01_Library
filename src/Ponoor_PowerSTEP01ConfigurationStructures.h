@@ -1,3 +1,6 @@
+#ifndef PONOOR_POWERSTEP01_CONFIGURATION_STRUCTURES_H
+#define PONOOR_POWERSTEP01_CONFIGURATION_STRUCTURES_H
+
 #include "Ponoor_PowerSTEP01Library.h"
 
 struct basicPowerSTEP01Configuration
@@ -90,4 +93,4 @@ struct powerSTEP01Configuration
   }
 };
 
-
+#endif

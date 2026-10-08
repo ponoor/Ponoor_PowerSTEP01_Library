@@ -1,12 +1,18 @@
 // This library was forked from Megunolink's powerSTEP01_Arduino_Library : https://github.com/Megunolink/powerSTEP01_Arduino_Library
 // powerSTEP01_Arduino_Library was forked from SparkFun AutoDriver Arduino Library : https://github.com/sparkfun/SparkFun_AutoDriver_Arduino_Library
 
-#ifndef PONOOR_POWERSTEP01_h
-#define PONOOR_POWERSTEP01_h
+#ifndef PONOOR_POWERSTEP01_LIBRARY_H
+#define PONOOR_POWERSTEP01_LIBRARY_H
 
 #include "Arduino.h"
 #include <SPI.h>
 #include "Ponoor_PowerSTEP01SPINConstants.h"
+
+// Maximum number of powerSTEP instances (chips in the daisy chain) that the
+//  library can handle. Define this before including the library to override.
+#ifndef POWERSTEP01_MAX_DEVICES
+#define POWERSTEP01_MAX_DEVICES 16
+#endif
 
 class powerSTEP
 {
@@ -44,11 +50,11 @@ class powerSTEP
     void setBoostMode(boolean enable);
     void setAcc(float stepsPerSecondPerSecond);
     void setDec(float stepsPerSecondPerSecond);
-  	void setMaxSpeedRaw(unsigned long integerSpeed);
-	  void setMinSpeedRaw(unsigned long integerSpeed);
-	  void setFullSpeedRaw(unsigned long integerSpeed);
-	  void setAccRaw(unsigned long integerSpeed);
-	  void setDecRaw(unsigned long integerSpeed);
+    void setMaxSpeedRaw(unsigned long integerSpeed);
+    void setMinSpeedRaw(unsigned long integerSpeed);
+    void setFullSpeedRaw(unsigned long integerSpeed);
+    void setAccRaw(unsigned long integerSpeed);
+    void setDecRaw(unsigned long integerSpeed);
     void setOCThreshold(byte threshold);
     void setPWMFreq(int divisor, int multiplier);
     void setSlewRate(int slewRate);
@@ -62,10 +68,10 @@ class powerSTEP
     void setDecKVAL(byte kvalInput);
     void setRunKVAL(byte kvalInput);
     void setHoldKVAL(byte kvalInput);
-  	void setAccTVAL(byte tvalInput);
-	  void setDecTVAL(byte tvalInput);
-	  void setRunTVAL(byte tvalInput);
-	  void setHoldTVAL(byte tvalInput);
+    void setAccTVAL(byte tvalInput);
+    void setDecTVAL(byte tvalInput);
+    void setRunTVAL(byte tvalInput);
+    void setHoldTVAL(byte tvalInput);
 
     boolean getLoSpdOpt();
     boolean getBoostMode();
@@ -94,10 +100,10 @@ class powerSTEP
     byte getDecKVAL();
     byte getRunKVAL();
     byte getHoldKVAL();
-  	byte getAccTVAL();
-	  byte getDecTVAL();
-	  byte getRunTVAL();
-	  byte getHoldTVAL();
+    byte getAccTVAL();
+    byte getDecTVAL();
+    byte getRunTVAL();
+    byte getHoldTVAL();
 
     // ...and now, operational commands.
     long getPos();
@@ -123,14 +129,41 @@ class powerSTEP
     void hardStop();
     void softHiZ();
     void hardHiZ();
-    
-    
+
+    // SPI clock used for all transfers, in Hz. Default 4 MHz; values above
+    //  the datasheet maximum of 5 MHz are clamped.
+    static void setSPIClock(uint32_t hz);
+
   private:
+    // Interrupt protection for multi-byte SPI transactions (SAMD only; no-ops
+    //  on other architectures). _irqSave() returns the previous PRIMASK and
+    //  disables interrupts; _irqRestore() re-enables them only if they were
+    //  enabled before, so calls can be nested safely.
+    static uint32_t _irqSave();
+    static void _irqRestore(uint32_t primask);
+
     byte SPIXfer(byte data);
     long xferParam(unsigned long value, byte bitLen);
     long paramHandler(byte param, unsigned long value);
-    
-    // Support functions for converting from user units to L6470 units
+
+    // Register width in bits (0 for an unknown register) and the value
+    //  sanitizing applied before writing it.
+    static byte paramBitLen(byte param);
+    static unsigned long paramMask(byte param, unsigned long value);
+
+    // Command assembly shared by the immediate and the prepare*() APIs. Each
+    //  function writes the bytes to send into tx[] and returns their count.
+    static byte buildData(byte cmd, unsigned long value, byte dataBytes, byte *tx);
+    static byte buildRun(byte dir, unsigned long integerSpeed, byte *tx);
+    static byte buildMove(byte dir, unsigned long numSteps, byte *tx);
+    static byte buildGoTo(byte cmd, long pos, byte *tx);
+    static byte buildSetParam(byte param, unsigned long value, byte *tx, byte *bitLen);
+    static byte buildGetParam(byte param, byte *tx, byte *bitLen);
+
+    // Sends a multi-byte command in one interrupt-protected transaction.
+    void sendBytes(const byte *tx, byte len);
+
+    // Support functions for converting from user units to powerSTEP01 units
     unsigned long accCalc(float stepsPerSecPerSec);
     unsigned long decCalc(float stepsPerSecPerSec);
     unsigned long minSpdCalc(float stepsPerSec);
@@ -139,7 +172,7 @@ class powerSTEP
     unsigned long intSpdCalc(float stepsPerSec);
     unsigned long spdCalc(float stepsPerSec);
 
-    // Support functions for converting from L6470 to user units
+    // Support functions for converting from powerSTEP01 to user units
     float accParse(unsigned long stepsPerSecPerSec);
     float decParse(unsigned long stepsPerSecPerSec);
     float minSpdParse(unsigned long stepsPerSec);
@@ -154,6 +187,7 @@ class powerSTEP
     int _position;
     static int _numBoards;
     SPIClass *_SPI;
+    static uint32_t _spiClock;
 };
 
 // User constants for public functions.

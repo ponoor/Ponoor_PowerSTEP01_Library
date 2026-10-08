@@ -1,5 +1,5 @@
-#ifndef _dspin_constants_h_
-#define _dspin_constants_h_
+#ifndef PONOOR_POWERSTEP01_CONSTANTS_H
+#define PONOOR_POWERSTEP01_CONSTANTS_H
 
 // Constant definitions provided by ST
 
@@ -18,7 +18,7 @@
 // ...next, define the SYNC_EN bit. When set, the BUSYN pin will instead
 //  output a clock related to the full-step frequency as defined by the
 //  SYNC_SEL bits below.
-#define STEP_MODE_SYNC_EN	 0x80  // Mask for this bit
+#define STEP_MODE_SYNC_EN  0x80  // Mask for this bit
 #define SYNC_EN 0x80
 
 // ...last, define the SYNC_SEL modes. The clock output is defined by
@@ -45,7 +45,7 @@
 //  the FLAG pin will go low. The register must be queried to determine which event
 //  caused the alarm.
 #define ALARM_EN_OVERCURRENT       0x01
-#define ALARM_EN_THERMAL_SHUTDOWN	 0x02
+#define ALARM_EN_THERMAL_SHUTDOWN  0x02
 #define ALARM_EN_THERMAL_WARNING   0x04
 #define ALARM_EN_UNDER_VOLTAGE     0x08
 #define ALARM_EN_ADC_UVLO          0x10
@@ -210,26 +210,50 @@
 #define TON_MIN              0x0F
 #define TOFF_MIN             0x10
 
-//dSPIN commands
-#define NOP                  0x00
-#define SET_PARAM            0x00
-#define GET_PARAM            0x20
-#define RUN                  0x50
-#define STEP_CLOCK           0x58
-#define MOVE                 0x40
-#define GOTO                 0x60
-#define GOTO_DIR             0x68
-#define GO_UNTIL             0x82
-#define RELEASE_SW           0x92
-#define GO_HOME              0x70
-#define GO_MARK              0x78
-#define RESET_POS            0xD8
-#define RESET_DEVICE         0xC0
-#define SOFT_STOP            0xB0
-#define HARD_STOP            0xB8
-#define SOFT_HIZ             0xA0
-#define HARD_HIZ             0xA8
+// SPI commands
+#define CMD_NOP              0x00
+#define CMD_SET_PARAM        0x00
+#define CMD_GET_PARAM        0x20
+#define CMD_RUN              0x50
+#define CMD_STEP_CLOCK       0x58
+#define CMD_MOVE             0x40
+#define CMD_GOTO             0x60
+#define CMD_GOTO_DIR         0x68
+#define CMD_GO_UNTIL         0x82
+#define CMD_RELEASE_SW       0x92
+#define CMD_GO_HOME          0x70
+#define CMD_GO_MARK          0x78
+#define CMD_RESET_POS        0xD8
+#define CMD_RESET_DEVICE     0xC0
+#define CMD_SOFT_STOP        0xB0
+#define CMD_HARD_STOP        0xB8
+#define CMD_SOFT_HIZ         0xA0
+#define CMD_HARD_HIZ         0xA8
 #define CMD_GET_STATUS       0xD0
+
+// The command constants used to be defined without the CMD_ prefix, which
+//  clashed with other libraries. The old names are available only when
+//  POWERSTEP01_LEGACY_COMMAND_NAMES is defined before including the library.
+#ifdef POWERSTEP01_LEGACY_COMMAND_NAMES
+#define NOP                  CMD_NOP
+#define SET_PARAM            CMD_SET_PARAM
+#define GET_PARAM            CMD_GET_PARAM
+#define RUN                  CMD_RUN
+#define STEP_CLOCK           CMD_STEP_CLOCK
+#define MOVE                 CMD_MOVE
+#define GOTO                 CMD_GOTO
+#define GOTO_DIR             CMD_GOTO_DIR
+#define GO_UNTIL             CMD_GO_UNTIL
+#define RELEASE_SW           CMD_RELEASE_SW
+#define GO_HOME              CMD_GO_HOME
+#define GO_MARK              CMD_GO_MARK
+#define RESET_POS            CMD_RESET_POS
+#define RESET_DEVICE         CMD_RESET_DEVICE
+#define SOFT_STOP            CMD_SOFT_STOP
+#define HARD_STOP            CMD_HARD_STOP
+#define SOFT_HIZ             CMD_SOFT_HIZ
+#define HARD_HIZ             CMD_HARD_HIZ
+#endif
 
 #endif
 
