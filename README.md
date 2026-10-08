@@ -7,8 +7,6 @@ This library is a modification of the Megunolink [powerSTEP01_Arduino_Library](h
 
 The sister library for the L6470 is [Ponoor_L6470_Library](https://github.com/ponoor/Ponoor_L6470_Library).
 
-<img src="http://ponoor.com/manage/wp-content/uploads/2020/10/IMG_3852-e1603244987895.jpg" width="600" />
-
 Repository Contents
 -------------------
 * **src** - Source of the Arduino library.
