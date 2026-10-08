@@ -355,7 +355,7 @@ byte powerSTEP::SPIXfer(byte data)
     dataPacket[i] = 0;
   }
   dataPacket[_position] = data;
-  // CS has to stay HIGH for at least tdisCS (625 ns, datasheet Table 5)
+  // CS has to stay HIGH for at least tdisCS (625 ns, datasheet Table 4)
   //  between two transfers. Ending a transaction and starting the next one
   //  takes longer than that, even at 5 MHz.
   digitalWrite(_CSPin, LOW);
