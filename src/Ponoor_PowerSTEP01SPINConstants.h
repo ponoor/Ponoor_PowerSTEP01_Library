@@ -36,8 +36,8 @@
 
 // CM_VM bit
 #define STEP_MODE_CM_VM 0x08
-#define VOLTAGE_MODE 0x00
-#define CURRENT_MODE 0x01
+#define VOLTAGE_MODE 0x00  // CM_VM = 0
+#define CURRENT_MODE 0x08  // CM_VM = 1 (same as STEP_MODE_CM_VM)
 
 // Bit names for the ALARM_EN register.
 //  Each of these bits defines one potential alarm condition.
@@ -85,6 +85,11 @@
 #define CONFIG_VS_COMP_DISABLE         0x0000  // Disable motor voltage compensation.
 #define CONFIG_VS_COMP_ENABLE          0x0020  // Enable motor voltage compensation.
 
+// Current mode only: enable peak current adjustment through the ADCIN pin
+//  (datasheet Table 52). This is the same bit position as EN_VSCOMP in voltage
+//  mode, i.e. CONFIG_EN_VSCOMP and CONFIG_EN_TQREG are the same bit.
+#define CONFIG_EN_TQREG                0x0020  // Mask for this bit.
+
 // Configure overcurrent detection event handling
 #define CONFIG_OC_SD                   0x0080  // Mask for this bit.
 #define CONFIG_OC_SD_DISABLE           0x0000  // Bridges do NOT shutdown on OC detect
@@ -100,8 +105,8 @@
 #define CONFIG_VCCVAL_7_5V             0x0000 // 7.5V Vcc output
 #define CONFIG_VCCVAL_15V              0x0200 // 15V Vcc output
 
-// Integer divisors for PWM sinewave generation
-//  See page 32 of the datasheet for more information on this.
+// Multiplication factor for the PWM sinewave frequency (voltage mode)
+//  F_PWM_DEC is CONFIG 12:10. See Table 48 of the datasheet.
 #define CONFIG_F_PWM_DEC               0x1C00      // mask for this bit field
 #define CONFIG_PWM_MUL_0_625           (0x00)<<10
 #define CONFIG_PWM_MUL_0_75            (0x01)<<10
@@ -112,7 +117,8 @@
 #define CONFIG_PWM_MUL_1_75            (0x06)<<10
 #define CONFIG_PWM_MUL_2               (0x07)<<10
 
-// Multiplier for the PWM sinewave frequency
+// Integer division factor for the PWM sinewave frequency (voltage mode)
+//  F_PWM_INT is CONFIG 15:13. See Table 47 of the datasheet.
 #define CONFIG_F_PWM_INT               0xE000     // mask for this bit field.
 #define CONFIG_PWM_DIV_1               (0x00)<<13
 #define CONFIG_PWM_DIV_2               (0x01)<<13
@@ -161,6 +167,10 @@
 #define STATUS_MOT_STATUS_ACCELERATION  (0x0001)<<5 // Motor accelerating
 #define STATUS_MOT_STATUS_DECELERATION  (0x0002)<<5 // Motor decelerating
 #define STATUS_MOT_STATUS_CONST_SPD     (0x0003)<<5 // Motor at constant speed
+
+// FS_SPD register: bits 9:0 are the full-step speed threshold, bit 10 is
+//  BOOST_MODE (datasheet Table 15).
+#define FS_SPD_BOOST_MODE    0x0400
 
 // Register address redefines.
 //  See the Param_Handler() function for more info about these.

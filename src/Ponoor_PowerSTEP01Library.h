@@ -41,6 +41,7 @@ class powerSTEP
     void setMaxSpeed(float stepsPerSecond);
     void setMinSpeed(float stepsPerSecond);
     void setFullSpeed(float stepsPerSecond);
+    void setBoostMode(boolean enable);
     void setAcc(float stepsPerSecondPerSecond);
     void setDec(float stepsPerSecondPerSecond);
   	void setMaxSpeedRaw(unsigned long integerSpeed);
@@ -67,6 +68,7 @@ class powerSTEP
 	  void setHoldTVAL(byte tvalInput);
 
     boolean getLoSpdOpt();
+    boolean getBoostMode();
     // getSyncPin
     byte getStepMode();
     float getSpeed();
@@ -202,30 +204,35 @@ class powerSTEP
 #define STEP_FS_128 0x07
 
 // PWM Multiplier and divisor options
-#define PWM_MUL_0_625           (0x00)<<10
-#define PWM_MUL_0_75            (0x01)<<10
-#define PWM_MUL_0_875           (0x02)<<10
-#define PWM_MUL_1               (0x03)<<10
-#define PWM_MUL_1_25            (0x04)<<10
-#define PWM_MUL_1_5             (0x05)<<10
-#define PWM_MUL_1_75            (0x06)<<10
-#define PWM_MUL_2               (0x07)<<10
-#define PWM_DIV_1               (0x00)<<13
-#define PWM_DIV_2               (0x01)<<13
-#define PWM_DIV_3               (0x02)<<13
-#define PWM_DIV_4               (0x03)<<13
-#define PWM_DIV_5               (0x04)<<13
-#define PWM_DIV_6               (0x05)<<13
-#define PWM_DIV_7               (0x06)<<13
+#define PWM_MUL_0_625           ((0x00)<<10)
+#define PWM_MUL_0_75            ((0x01)<<10)
+#define PWM_MUL_0_875           ((0x02)<<10)
+#define PWM_MUL_1               ((0x03)<<10)
+#define PWM_MUL_1_25            ((0x04)<<10)
+#define PWM_MUL_1_5             ((0x05)<<10)
+#define PWM_MUL_1_75            ((0x06)<<10)
+#define PWM_MUL_2               ((0x07)<<10)
+#define PWM_DIV_1               ((0x00)<<13)
+#define PWM_DIV_2               ((0x01)<<13)
+#define PWM_DIV_3               ((0x02)<<13)
+#define PWM_DIV_4               ((0x03)<<13)
+#define PWM_DIV_5               ((0x04)<<13)
+#define PWM_DIV_6               ((0x05)<<13)
+#define PWM_DIV_7               ((0x06)<<13)
 
-// Slew rate options, GATECFG1 7:5 = Igate, GATECFG1 4:0 = Tcc, 
-// see datasheet tables 11, 34, 35
-#define SR_114V_us              0x0040 | 0x0018  // 8mA | 3125ns = 114V/us
-#define SR_220V_us              0x0060 | 0x000C  // 16mA | 1625ns = 220V/us
-#define SR_400V_us              0x0080 | 0x0007  // 24mA | 1000ns = 400V/us
-#define SR_520V_us              0x00A0 | 0x0006  // 32mA | 875ns = 520V/us
-#define SR_790V_us              0x00C0 | 0x0003  // 64mA | 500ns = 790V/us
-#define SR_980V_us              0x00D0 | 0x0002  // 96mA | 275ns = 980V/us
+// Slew rate options for setSlewRate(). The value is written to GATECFG1 7:0:
+//  bits 7:5 = IGATE, bits 4:0 = TCC (datasheet Tables 11, 33, 34 and 35).
+//  IGATE: 8mA=0b010, 16mA=0b011, 24mA=0b100, 32mA=0b101, 64mA=0b110, 96mA=0b111.
+//  TCC = (tCC / 125ns) - 1.
+// The slew rates are those of Table 11 (VS = 48V). The tCC of SR_220V_us is
+//  1625ns (TCC = 0x0C), the closest value to the 1600ns of Table 11 that the
+//  125ns step of TCC allows.
+#define SR_114V_us              (0x0040 | 0x0018)  // 8mA | 3125ns = 114V/us
+#define SR_220V_us              (0x0060 | 0x000C)  // 16mA | 1625ns = 220V/us
+#define SR_400V_us              (0x0080 | 0x0007)  // 24mA | 1000ns = 400V/us
+#define SR_520V_us              (0x00A0 | 0x0006)  // 32mA | 875ns = 520V/us
+#define SR_790V_us              (0x00C0 | 0x0003)  // 64mA | 500ns = 790V/us
+#define SR_980V_us              (0x00E0 | 0x0002)  // 96mA | 375ns = 980V/us
 
 // Overcurrent bridge shutdown options
 #define OC_SD_DISABLE           0x0000  // Bridges do NOT shutdown on OC detect
