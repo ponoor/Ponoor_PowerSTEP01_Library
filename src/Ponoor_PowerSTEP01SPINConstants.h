@@ -1,5 +1,5 @@
-#ifndef _dspin_constants_h_
-#define _dspin_constants_h_
+#ifndef PONOOR_POWERSTEP01_CONSTANTS_H
+#define PONOOR_POWERSTEP01_CONSTANTS_H
 
 // Constant definitions provided by ST
 
@@ -18,7 +18,7 @@
 // ...next, define the SYNC_EN bit. When set, the BUSYN pin will instead
 //  output a clock related to the full-step frequency as defined by the
 //  SYNC_SEL bits below.
-#define STEP_MODE_SYNC_EN	 0x80  // Mask for this bit
+#define STEP_MODE_SYNC_EN  0x80  // Mask for this bit
 #define SYNC_EN 0x80
 
 // ...last, define the SYNC_SEL modes. The clock output is defined by
@@ -36,8 +36,8 @@
 
 // CM_VM bit
 #define STEP_MODE_CM_VM 0x08
-#define VOLTAGE_MODE 0x00
-#define CURRENT_MODE 0x01
+#define VOLTAGE_MODE 0x00  // CM_VM = 0
+#define CURRENT_MODE 0x08  // CM_VM = 1 (same as STEP_MODE_CM_VM)
 
 // Bit names for the ALARM_EN register.
 //  Each of these bits defines one potential alarm condition.
@@ -45,7 +45,7 @@
 //  the FLAG pin will go low. The register must be queried to determine which event
 //  caused the alarm.
 #define ALARM_EN_OVERCURRENT       0x01
-#define ALARM_EN_THERMAL_SHUTDOWN	 0x02
+#define ALARM_EN_THERMAL_SHUTDOWN  0x02
 #define ALARM_EN_THERMAL_WARNING   0x04
 #define ALARM_EN_UNDER_VOLTAGE     0x08
 #define ALARM_EN_ADC_UVLO          0x10
@@ -85,6 +85,11 @@
 #define CONFIG_VS_COMP_DISABLE         0x0000  // Disable motor voltage compensation.
 #define CONFIG_VS_COMP_ENABLE          0x0020  // Enable motor voltage compensation.
 
+// Current mode only: enable peak current adjustment through the ADCIN pin
+//  (datasheet Table 52). This is the same bit position as EN_VSCOMP in voltage
+//  mode, i.e. CONFIG_EN_VSCOMP and CONFIG_EN_TQREG are the same bit.
+#define CONFIG_EN_TQREG                0x0020  // Mask for this bit.
+
 // Configure overcurrent detection event handling
 #define CONFIG_OC_SD                   0x0080  // Mask for this bit.
 #define CONFIG_OC_SD_DISABLE           0x0000  // Bridges do NOT shutdown on OC detect
@@ -100,8 +105,8 @@
 #define CONFIG_VCCVAL_7_5V             0x0000 // 7.5V Vcc output
 #define CONFIG_VCCVAL_15V              0x0200 // 15V Vcc output
 
-// Integer divisors for PWM sinewave generation
-//  See page 32 of the datasheet for more information on this.
+// Multiplication factor for the PWM sinewave frequency (voltage mode)
+//  F_PWM_DEC is CONFIG 12:10. See Table 48 of the datasheet.
 #define CONFIG_F_PWM_DEC               0x1C00      // mask for this bit field
 #define CONFIG_PWM_MUL_0_625           (0x00)<<10
 #define CONFIG_PWM_MUL_0_75            (0x01)<<10
@@ -112,7 +117,8 @@
 #define CONFIG_PWM_MUL_1_75            (0x06)<<10
 #define CONFIG_PWM_MUL_2               (0x07)<<10
 
-// Multiplier for the PWM sinewave frequency
+// Integer division factor for the PWM sinewave frequency (voltage mode)
+//  F_PWM_INT is CONFIG 15:13. See Table 47 of the datasheet.
 #define CONFIG_F_PWM_INT               0xE000     // mask for this bit field.
 #define CONFIG_PWM_DIV_1               (0x00)<<13
 #define CONFIG_PWM_DIV_2               (0x01)<<13
@@ -162,6 +168,10 @@
 #define STATUS_MOT_STATUS_DECELERATION  (0x0002)<<5 // Motor decelerating
 #define STATUS_MOT_STATUS_CONST_SPD     (0x0003)<<5 // Motor at constant speed
 
+// FS_SPD register: bits 9:0 are the full-step speed threshold, bit 10 is
+//  BOOST_MODE (datasheet Table 15).
+#define FS_SPD_BOOST_MODE    0x0400
+
 // Register address redefines.
 //  See the Param_Handler() function for more info about these.
 #define ABS_POS              0x01
@@ -200,26 +210,50 @@
 #define TON_MIN              0x0F
 #define TOFF_MIN             0x10
 
-//dSPIN commands
-#define NOP                  0x00
-#define SET_PARAM            0x00
-#define GET_PARAM            0x20
-#define RUN                  0x50
-#define STEP_CLOCK           0x58
-#define MOVE                 0x40
-#define GOTO                 0x60
-#define GOTO_DIR             0x68
-#define GO_UNTIL             0x82
-#define RELEASE_SW           0x92
-#define GO_HOME              0x70
-#define GO_MARK              0x78
-#define RESET_POS            0xD8
-#define RESET_DEVICE         0xC0
-#define SOFT_STOP            0xB0
-#define HARD_STOP            0xB8
-#define SOFT_HIZ             0xA0
-#define HARD_HIZ             0xA8
+// SPI commands
+#define CMD_NOP              0x00
+#define CMD_SET_PARAM        0x00
+#define CMD_GET_PARAM        0x20
+#define CMD_RUN              0x50
+#define CMD_STEP_CLOCK       0x58
+#define CMD_MOVE             0x40
+#define CMD_GOTO             0x60
+#define CMD_GOTO_DIR         0x68
+#define CMD_GO_UNTIL         0x82
+#define CMD_RELEASE_SW       0x92
+#define CMD_GO_HOME          0x70
+#define CMD_GO_MARK          0x78
+#define CMD_RESET_POS        0xD8
+#define CMD_RESET_DEVICE     0xC0
+#define CMD_SOFT_STOP        0xB0
+#define CMD_HARD_STOP        0xB8
+#define CMD_SOFT_HIZ         0xA0
+#define CMD_HARD_HIZ         0xA8
 #define CMD_GET_STATUS       0xD0
+
+// The command constants used to be defined without the CMD_ prefix, which
+//  clashed with other libraries. The old names are available only when
+//  POWERSTEP01_LEGACY_COMMAND_NAMES is defined before including the library.
+#ifdef POWERSTEP01_LEGACY_COMMAND_NAMES
+#define NOP                  CMD_NOP
+#define SET_PARAM            CMD_SET_PARAM
+#define GET_PARAM            CMD_GET_PARAM
+#define RUN                  CMD_RUN
+#define STEP_CLOCK           CMD_STEP_CLOCK
+#define MOVE                 CMD_MOVE
+#define GOTO                 CMD_GOTO
+#define GOTO_DIR             CMD_GOTO_DIR
+#define GO_UNTIL             CMD_GO_UNTIL
+#define RELEASE_SW           CMD_RELEASE_SW
+#define GO_HOME              CMD_GO_HOME
+#define GO_MARK              CMD_GO_MARK
+#define RESET_POS            CMD_RESET_POS
+#define RESET_DEVICE         CMD_RESET_DEVICE
+#define SOFT_STOP            CMD_SOFT_STOP
+#define HARD_STOP            CMD_HARD_STOP
+#define SOFT_HIZ             CMD_SOFT_HIZ
+#define HARD_HIZ             CMD_HARD_HIZ
+#endif
 
 #endif
 

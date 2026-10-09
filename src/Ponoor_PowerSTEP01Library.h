@@ -1,12 +1,18 @@
 // This library was forked from Megunolink's powerSTEP01_Arduino_Library : https://github.com/Megunolink/powerSTEP01_Arduino_Library
 // powerSTEP01_Arduino_Library was forked from SparkFun AutoDriver Arduino Library : https://github.com/sparkfun/SparkFun_AutoDriver_Arduino_Library
 
-#ifndef PONOOR_POWERSTEP01_h
-#define PONOOR_POWERSTEP01_h
+#ifndef PONOOR_POWERSTEP01_LIBRARY_H
+#define PONOOR_POWERSTEP01_LIBRARY_H
 
 #include "Arduino.h"
 #include <SPI.h>
 #include "Ponoor_PowerSTEP01SPINConstants.h"
+
+// Maximum number of powerSTEP instances (chips in the daisy chain) that the
+//  library can handle. Define this before including the library to override.
+#ifndef POWERSTEP01_MAX_DEVICES
+#define POWERSTEP01_MAX_DEVICES 16
+#endif
 
 class powerSTEP
 {
@@ -41,13 +47,14 @@ class powerSTEP
     void setMaxSpeed(float stepsPerSecond);
     void setMinSpeed(float stepsPerSecond);
     void setFullSpeed(float stepsPerSecond);
+    void setBoostMode(boolean enable);
     void setAcc(float stepsPerSecondPerSecond);
     void setDec(float stepsPerSecondPerSecond);
-  	void setMaxSpeedRaw(unsigned long integerSpeed);
-	  void setMinSpeedRaw(unsigned long integerSpeed);
-	  void setFullSpeedRaw(unsigned long integerSpeed);
-	  void setAccRaw(unsigned long integerSpeed);
-	  void setDecRaw(unsigned long integerSpeed);
+    void setMaxSpeedRaw(unsigned long integerSpeed);
+    void setMinSpeedRaw(unsigned long integerSpeed);
+    void setFullSpeedRaw(unsigned long integerSpeed);
+    void setAccRaw(unsigned long integerSpeed);
+    void setDecRaw(unsigned long integerSpeed);
     void setOCThreshold(byte threshold);
     void setPWMFreq(int divisor, int multiplier);
     void setSlewRate(int slewRate);
@@ -61,12 +68,13 @@ class powerSTEP
     void setDecKVAL(byte kvalInput);
     void setRunKVAL(byte kvalInput);
     void setHoldKVAL(byte kvalInput);
-  	void setAccTVAL(byte tvalInput);
-	  void setDecTVAL(byte tvalInput);
-	  void setRunTVAL(byte tvalInput);
-	  void setHoldTVAL(byte tvalInput);
+    void setAccTVAL(byte tvalInput);
+    void setDecTVAL(byte tvalInput);
+    void setRunTVAL(byte tvalInput);
+    void setHoldTVAL(byte tvalInput);
 
     boolean getLoSpdOpt();
+    boolean getBoostMode();
     // getSyncPin
     byte getStepMode();
     float getSpeed();
@@ -92,10 +100,10 @@ class powerSTEP
     byte getDecKVAL();
     byte getRunKVAL();
     byte getHoldKVAL();
-  	byte getAccTVAL();
-	  byte getDecTVAL();
-	  byte getRunTVAL();
-	  byte getHoldTVAL();
+    byte getAccTVAL();
+    byte getDecTVAL();
+    byte getRunTVAL();
+    byte getHoldTVAL();
 
     // ...and now, operational commands.
     long getPos();
@@ -121,14 +129,93 @@ class powerSTEP
     void hardStop();
     void softHiZ();
     void hardHiZ();
-    
-    
+
+    // Packed daisy-chain transfers.
+    //
+    // The regular API sends one command per call, and every call shifts the
+    //  whole chain (N bytes per byte of command), so talking to N chips costs
+    //  N*N bytes per byte of command. The prepare*() methods only stage a
+    //  command in the instance (no SPI traffic; a later call overwrites the
+    //  staged command). performPrepared() then sends the staged commands of
+    //  ALL instances together, using at most 4 frames instead of N*(command
+    //  length) frames. Instances without a staged command get NOP.
+    //
+    // Restrictions: every instance must share the same CS pin and SPI port
+    //  (a single daisy chain). performPrepared() sends nothing and returns
+    //  false if this is not the case, or if positions are invalid/duplicated.
+    //
+    // prepareSetParam() writes the value as is, because nothing can be read
+    //  between the commands of a packed transfer. Registers that share their
+    //  address with a flag are therefore overwritten as a whole: writing
+    //  FS_SPD clears BOOST_MODE (bit 10) unless the value includes it, and
+    //  writing MIN_SPEED clears LSPD_OPT (bit 12). The setFullSpeedRaw() /
+    //  setMinSpeedRaw() / setBoostMode() / setLoSpdOpt() methods preserve
+    //  those flags because they read the register first.
+    void prepareGetParam(byte param);
+    void prepareSetParam(byte param, unsigned long value);
+    void prepareGetStatus();
+    void prepareGetPos();
+    void prepareRun(byte dir, float stepsPerSec);
+    void prepareRunRaw(byte dir, unsigned long integerSpeed);
+    void prepareMove(byte dir, unsigned long numSteps);
+    void prepareGoTo(long pos);
+    void prepareGoToDir(byte dir, long pos);
+    void prepareSoftStop();
+    void prepareHardStop();
+    void prepareSoftHiZ();
+    void prepareHardHiZ();
+    void prepareNop();  // cancel the staged command
+
+    // Sends the staged commands of all instances. Returns false (and sends
+    //  nothing) if the instances cannot be sent as a single chain.
+    static bool performPrepared();
+
+    // Results of the last performPrepared(); valid until the next prepare*()
+    //  call on this instance.
+    unsigned long preparedResult();  // response masked to the register width
+    long preparedPos();              // sign-extended ABS_POS (see getPos())
+    int preparedStatus();            // 16-bit STATUS (see getStatus())
+
+    // SPI clock used for all transfers, in Hz. Default 4 MHz; values above
+    //  the datasheet maximum of 5 MHz are clamped.
+    static void setSPIClock(uint32_t hz);
+
   private:
+    // Interrupt protection for multi-byte SPI transactions (SAMD only; no-ops
+    //  on other architectures). _irqSave() returns the previous PRIMASK and
+    //  disables interrupts; _irqRestore() re-enables them only if they were
+    //  enabled before, so calls can be nested safely.
+    static uint32_t _irqSave();
+    static void _irqRestore(uint32_t primask);
+
     byte SPIXfer(byte data);
     long xferParam(unsigned long value, byte bitLen);
     long paramHandler(byte param, unsigned long value);
-    
-    // Support functions for converting from user units to L6470 units
+
+    // Register width in bits (0 for an unknown register) and the value
+    //  sanitizing applied before writing it.
+    static byte paramBitLen(byte param);
+    static unsigned long paramMask(byte param, unsigned long value);
+
+    // Command assembly shared by the immediate and the prepare*() APIs. Each
+    //  function writes the bytes to send into tx[] and returns their count.
+    static byte buildData(byte cmd, unsigned long value, byte dataBytes, byte *tx);
+    static byte buildRun(byte dir, unsigned long integerSpeed, byte *tx);
+    static byte buildMove(byte dir, unsigned long numSteps, byte *tx);
+    static byte buildGoTo(byte cmd, long pos, byte *tx);
+    static byte buildSetParam(byte param, unsigned long value, byte *tx, byte *bitLen);
+    static byte buildGetParam(byte param, byte *tx, byte *bitLen);
+
+    // Sends a multi-byte command in one interrupt-protected transaction.
+    void sendBytes(const byte *tx, byte len);
+
+    // Stages a command for performPrepared().
+    void stage(const byte *tx, byte len, byte bitLen, byte type);
+
+    // Builds the frame-th packet of the chain (one byte per chip).
+    static void assembleFrame(byte frame, byte *packet);
+
+    // Support functions for converting from user units to powerSTEP01 units
     unsigned long accCalc(float stepsPerSecPerSec);
     unsigned long decCalc(float stepsPerSecPerSec);
     unsigned long minSpdCalc(float stepsPerSec);
@@ -137,7 +224,7 @@ class powerSTEP
     unsigned long intSpdCalc(float stepsPerSec);
     unsigned long spdCalc(float stepsPerSec);
 
-    // Support functions for converting from L6470 to user units
+    // Support functions for converting from powerSTEP01 to user units
     float accParse(unsigned long stepsPerSecPerSec);
     float decParse(unsigned long stepsPerSecPerSec);
     float minSpdParse(unsigned long stepsPerSec);
@@ -152,6 +239,18 @@ class powerSTEP
     int _position;
     static int _numBoards;
     SPIClass *_SPI;
+    static uint32_t _spiClock;
+
+    // Every instance registers itself so that performPrepared() can reach it.
+    static powerSTEP *_instances[POWERSTEP01_MAX_DEVICES];
+    void registerInstance();
+
+    enum { PREP_NONE = 0, PREP_GET_PARAM, PREP_SET_PARAM, PREP_GET_STATUS, PREP_COMMAND };
+    byte _prepTx[4];
+    byte _prepRx[4];
+    byte _prepLen;
+    byte _prepBitLen;
+    byte _prepType;
 };
 
 // User constants for public functions.
@@ -202,30 +301,35 @@ class powerSTEP
 #define STEP_FS_128 0x07
 
 // PWM Multiplier and divisor options
-#define PWM_MUL_0_625           (0x00)<<10
-#define PWM_MUL_0_75            (0x01)<<10
-#define PWM_MUL_0_875           (0x02)<<10
-#define PWM_MUL_1               (0x03)<<10
-#define PWM_MUL_1_25            (0x04)<<10
-#define PWM_MUL_1_5             (0x05)<<10
-#define PWM_MUL_1_75            (0x06)<<10
-#define PWM_MUL_2               (0x07)<<10
-#define PWM_DIV_1               (0x00)<<13
-#define PWM_DIV_2               (0x01)<<13
-#define PWM_DIV_3               (0x02)<<13
-#define PWM_DIV_4               (0x03)<<13
-#define PWM_DIV_5               (0x04)<<13
-#define PWM_DIV_6               (0x05)<<13
-#define PWM_DIV_7               (0x06)<<13
+#define PWM_MUL_0_625           ((0x00)<<10)
+#define PWM_MUL_0_75            ((0x01)<<10)
+#define PWM_MUL_0_875           ((0x02)<<10)
+#define PWM_MUL_1               ((0x03)<<10)
+#define PWM_MUL_1_25            ((0x04)<<10)
+#define PWM_MUL_1_5             ((0x05)<<10)
+#define PWM_MUL_1_75            ((0x06)<<10)
+#define PWM_MUL_2               ((0x07)<<10)
+#define PWM_DIV_1               ((0x00)<<13)
+#define PWM_DIV_2               ((0x01)<<13)
+#define PWM_DIV_3               ((0x02)<<13)
+#define PWM_DIV_4               ((0x03)<<13)
+#define PWM_DIV_5               ((0x04)<<13)
+#define PWM_DIV_6               ((0x05)<<13)
+#define PWM_DIV_7               ((0x06)<<13)
 
-// Slew rate options, GATECFG1 7:5 = Igate, GATECFG1 4:0 = Tcc, 
-// see datasheet tables 11, 34, 35
-#define SR_114V_us              0x0040 | 0x0018  // 8mA | 3125ns = 114V/us
-#define SR_220V_us              0x0060 | 0x000C  // 16mA | 1625ns = 220V/us
-#define SR_400V_us              0x0080 | 0x0007  // 24mA | 1000ns = 400V/us
-#define SR_520V_us              0x00A0 | 0x0006  // 32mA | 875ns = 520V/us
-#define SR_790V_us              0x00C0 | 0x0003  // 64mA | 500ns = 790V/us
-#define SR_980V_us              0x00D0 | 0x0002  // 96mA | 275ns = 980V/us
+// Slew rate options for setSlewRate(). The value is written to GATECFG1 7:0:
+//  bits 7:5 = IGATE, bits 4:0 = TCC (datasheet Tables 11, 33, 34 and 35).
+//  IGATE: 8mA=0b010, 16mA=0b011, 24mA=0b100, 32mA=0b101, 64mA=0b110, 96mA=0b111.
+//  TCC = (tCC / 125ns) - 1.
+// The slew rates are those of Table 11 (VS = 48V). The tCC of SR_220V_us is
+//  1625ns (TCC = 0x0C), the closest value to the 1600ns of Table 11 that the
+//  125ns step of TCC allows.
+#define SR_114V_us              (0x0040 | 0x0018)  // 8mA | 3125ns = 114V/us
+#define SR_220V_us              (0x0060 | 0x000C)  // 16mA | 1625ns = 220V/us
+#define SR_400V_us              (0x0080 | 0x0007)  // 24mA | 1000ns = 400V/us
+#define SR_520V_us              (0x00A0 | 0x0006)  // 32mA | 875ns = 520V/us
+#define SR_790V_us              (0x00C0 | 0x0003)  // 64mA | 500ns = 790V/us
+#define SR_980V_us              (0x00E0 | 0x0002)  // 96mA | 375ns = 980V/us
 
 // Overcurrent bridge shutdown options
 #define OC_SD_DISABLE           0x0000  // Bridges do NOT shutdown on OC detect

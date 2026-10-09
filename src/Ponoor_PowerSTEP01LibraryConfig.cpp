@@ -44,25 +44,25 @@ byte powerSTEP::getStepMode() {
 // Get current speed
 float powerSTEP::getSpeed()
 {
-	return spdParse(getParam(SPEED));
+  return spdParse(getParam(SPEED));
 }
 
 void powerSTEP::setVoltageMode() {
-	  // Clear CM_VM bit of STEP_MODE register. 
-	  byte stepModeConfig = (byte)getParam(STEP_MODE);
-	  stepModeConfig &= ~(STEP_MODE_CM_VM);
+  // Clear CM_VM bit of STEP_MODE register. 
+  byte stepModeConfig = (byte)getParam(STEP_MODE);
+  stepModeConfig &= ~(STEP_MODE_CM_VM);
 
-	  // Now push the change to the chip.
-	  setParam(STEP_MODE, (unsigned long)stepModeConfig);
+  // Now push the change to the chip.
+  setParam(STEP_MODE, (unsigned long)stepModeConfig);
 }
 
 void powerSTEP::setCurrentMode() {
-	  // Set CM_VM bit of STEP_MODE register.
-	  byte stepModeConfig = (byte)getParam(STEP_MODE);
-	  stepModeConfig |= STEP_MODE_CM_VM;
+  // Set CM_VM bit of STEP_MODE register.
+  byte stepModeConfig = (byte)getParam(STEP_MODE);
+  stepModeConfig |= STEP_MODE_CM_VM;
 
-	  // Now push the change to the chip.
-	  setParam(STEP_MODE, (unsigned long)stepModeConfig);
+  // Now push the change to the chip.
+  setParam(STEP_MODE, (unsigned long)stepModeConfig);
 }
 
 // This is the maximum speed the dSPIN will attempt to produce.
@@ -76,8 +76,8 @@ void powerSTEP::setMaxSpeed(float stepsPerSecond)
 }
 void powerSTEP::setMaxSpeedRaw(unsigned long integerSpeed)
 {
-	// Now, we can set that paramter.
-	setParam(MAX_SPEED, integerSpeed);
+  // Now, we can set that paramter.
+  setParam(MAX_SPEED, integerSpeed);
 }
 
 float powerSTEP::getMaxSpeed()
@@ -86,7 +86,7 @@ float powerSTEP::getMaxSpeed()
 }
 unsigned long powerSTEP::getMaxSpeedRaw()
 {
-	return getParam(MAX_SPEED);
+  return getParam(MAX_SPEED);
 }
 
 // Set the minimum speed allowable in the system. This is the speed a motion
@@ -114,7 +114,7 @@ float powerSTEP::getMinSpeed()
 }
 unsigned long powerSTEP::getMinSpeedRaw()
 {
-	return getParam(MIN_SPEED);
+  return getParam(MIN_SPEED);
 }
 
 // Above this threshold, the dSPIN will cease microstepping and go to full-step
@@ -126,7 +126,25 @@ void powerSTEP::setFullSpeed(float stepsPerSecond)
 }
 void powerSTEP::setFullSpeedRaw(unsigned long integerSpeed)
 {
-  setParam(FS_SPD, integerSpeed);
+  // FS_SPD also contains the BOOST_MODE flag (bit 10), so we need to protect
+  //  that and write only the lower 10 bits of the speed.
+  unsigned long temp = getParam(FS_SPD) & FS_SPD_BOOST_MODE;
+  setParam(FS_SPD, (integerSpeed & 0x000003FF) | temp);
+}
+
+// BOOST_MODE sets the amplitude of the voltage square wave during full-step
+//  operation (datasheet 7.4.1, 11.1.9).
+void powerSTEP::setBoostMode(boolean enable)
+{
+  unsigned long temp = getParam(FS_SPD);
+  if (enable) temp |= FS_SPD_BOOST_MODE;
+  else        temp &= ~((unsigned long)FS_SPD_BOOST_MODE);
+  setParam(FS_SPD, temp);
+}
+
+boolean powerSTEP::getBoostMode()
+{
+  return (boolean) ((getParam(FS_SPD) & FS_SPD_BOOST_MODE) != 0);
 }
 
 float powerSTEP::getFullSpeed()
@@ -135,12 +153,14 @@ float powerSTEP::getFullSpeed()
 }
 unsigned long powerSTEP::getFullSpeedRaw()
 {
-	return getParam(FS_SPD);
+  // Exclude BOOST_MODE (bit 10), which is not a part of the speed value.
+  return getParam(FS_SPD) & 0x000003FF;
 }
 
 // Set the acceleration rate, in steps per second per second. This value is
-//  converted to a dSPIN friendly value. Any value larger than 29802 will
-//  disable acceleration, putting the chip in "infinite" acceleration mode.
+//  converted to a register value in the range 0x001-0xFFE (14.55 to 59575
+//  steps/s/s); values outside the range are clamped. 0xFFF is reserved by the
+//  datasheet (11.1.5). Use hardStop() to stop with infinite deceleration.
 void powerSTEP::setAcc(float stepsPerSecondPerSecond)
 {
   unsigned long integerAcc = accCalc(stepsPerSecondPerSecond);
@@ -148,7 +168,7 @@ void powerSTEP::setAcc(float stepsPerSecondPerSecond)
 }
 void powerSTEP::setAccRaw(unsigned long integerAcc)
 {
-	setParam(ACC, integerAcc);
+  setParam(ACC, integerAcc);
 }
 
 float powerSTEP::getAcc()
@@ -157,10 +177,11 @@ float powerSTEP::getAcc()
 }
 unsigned long powerSTEP::getAccRaw()
 {
-	return getParam(ACC);
+  return getParam(ACC);
 }
 
-// Same rules as setAcc().
+// Same rules as setAcc(), except that the upper limit is 0xFFF (59590
+//  steps/s/s), which is not reserved for DEC (datasheet 7.6, 11.1.6).
 void powerSTEP::setDec(float stepsPerSecondPerSecond)
 {
   unsigned long integerDec = decCalc(stepsPerSecondPerSecond);
@@ -168,18 +189,21 @@ void powerSTEP::setDec(float stepsPerSecondPerSecond)
 }
 void powerSTEP::setDecRaw(unsigned long integerDec)
 {
-	setParam(DECEL, integerDec);
+  setParam(DECEL, integerDec);
 }
 
 float powerSTEP::getDec()
 {
-  return accParse(getParam(DECEL));
+  return decParse(getParam(DECEL));
 }
 unsigned long powerSTEP::getDecRaw()
 {
-	return getParam(DECEL);
+  return getParam(DECEL);
 }
 
+// The threshold is a 5-bit value: (threshold + 1) * 31.25mV, from 31.25mV to
+//  1V (datasheet Table 25). It is compared with the voltage across the
+//  internal sense resistor, so the current depends on the board.
 void powerSTEP::setOCThreshold(byte threshold)
 {
   setParam(OCD_TH, 0x1F & threshold);
@@ -235,7 +259,7 @@ void powerSTEP::setSlewRate(int slewRate)
 
 int powerSTEP::getSlewRate()
 {
-  return (int) (getParam(CONFIG) & 0x0300);
+  return (int) (getParam(GATECFG1) & 0x00FF);
 }
 
 // Single bit- do we shutdown the drivers on overcurrent or not?
@@ -374,42 +398,42 @@ byte powerSTEP::getHoldKVAL()
 // TVAL registers are specific for current mode driving.
 void powerSTEP::setAccTVAL(byte tvalInput)
 {
-	setParam(TVAL_ACC, tvalInput);
+  setParam(TVAL_ACC, tvalInput & 0x7F);
 }
 
 byte powerSTEP::getAccTVAL()
 {
-	return (byte) getParam(TVAL_ACC);
+  return (byte) getParam(TVAL_ACC);
 }
 
 void powerSTEP::setDecTVAL(byte tvalInput)
 {
-	setParam(TVAL_DEC, tvalInput);
+  setParam(TVAL_DEC, tvalInput & 0x7F);
 }
 
 byte powerSTEP::getDecTVAL()
 {
-	return (byte) getParam(TVAL_DEC);
+  return (byte) getParam(TVAL_DEC);
 }
 
 void powerSTEP::setRunTVAL(byte tvalInput)
 {
-	setParam(TVAL_RUN, tvalInput);
+  setParam(TVAL_RUN, tvalInput & 0x7F);
 }
 
 byte powerSTEP::getRunTVAL()
 {
-	return (byte) getParam(TVAL_RUN);
+  return (byte) getParam(TVAL_RUN);
 }
 
 void powerSTEP::setHoldTVAL(byte tvalInput)
 {
-	setParam(TVAL_HOLD, tvalInput);
+  setParam(TVAL_HOLD, tvalInput & 0x7F);
 }
 
 byte powerSTEP::getHoldTVAL()
 {
-	return (byte) getParam(TVAL_HOLD);
+  return (byte) getParam(TVAL_HOLD);
 }
 
 // Enable or disable the low-speed optimization option. With LSPD_OPT enabled,

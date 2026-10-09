@@ -4,11 +4,17 @@
 // Written 2017/1/17 by Elliot Baptist for Number Eight Innovation
 // Using a version of the SparkFun powerSTEP library modified for the powerSTEP01 
 
+// Required libraries (not included with this library, install them first):
+//   MegunoLink Arduino library - provides MegunoLink.h, CommandHandler.h and
+//   EEPROMStore.h. See https://www.megunolink.com/
+// The MegunoLink interface file (StepperDriverInterface(powerSTEP01).mlx) in
+// this folder needs the MegunoLink software.
+
 // Configuration structures used for EEPROM saving of configuration
-#include "powerSTEP01ConfigurationStructures.h"
+#include "Ponoor_PowerSTEP01ConfigurationStructures.h"
 
 // Driver includes
-#include "powerSTEP01ArduinoLibrary.h"
+#include "Ponoor_PowerSTEP01Library.h"
 #include "SPI.h"
 
 // MegunoLink control includes
